@@ -1,0 +1,257 @@
+/* ============================================================
+   Interlock landing — "Aztec-style" editorial system (az-)
+   Anti-cliché: warm parchment + ink, acid accents, literary serif
+   display, numbered manifesto sections, illuminated verdict plate,
+   restrained micro-interactions (no hero-3D). Scoped under .az.
+   ============================================================ */
+.az {
+  --paper:        #f3ebda;   /* parchment base */
+  --paper-2:      #fbf6ea;   /* raised paper (cards/plates) */
+  --paper-3:      #efe5d0;   /* sunk paper */
+  --ink:          #17140e;   /* near-black, warm */
+  --ink-2:        #2a251c;   /* dark section bg */
+  --tx-ink:       #1c1810;   /* primary text on paper */
+  --tx-ink-2:     #6a6151;   /* muted text on paper */
+  --tx-ink-3:     #968b75;   /* faint */
+  --tx-paper:     #f3ebda;   /* text on ink sections */
+  --tx-paper-2:   #c4b89c;
+  --rule:         #d9cdb2;   /* hairline on paper */
+  --rule-ink:     #3a3326;   /* hairline on ink */
+
+  /* acid + jewel accents */
+  --chartreuse:   #c2ef34;
+  --orchid:       #e64fc4;
+  --lapis:        #2f63dd;
+  --malachite:    #1f8a63;   /* ALLOW */
+  --vermillion:   #d9492a;   /* BLOCK */
+  --aubergine:    #4a2b57;
+
+  --maxw: 1160px;
+  --font-serif: var(--font-fraunces), "Fraunces", Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: relative;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--tx-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+/* film grain — evokes the acid-washed engraving texture */
+.az::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+.az > * { position: relative; z-index: 1; }
+.az-container { max-width: var(--maxw); margin: 0 auto; padding: 0 40px; }
+
+/* type */
+.az-serif { font-family: var(--font-serif); font-weight: 300; letter-spacing: -0.02em; }
+.az-mono { font-family: var(--font-mono); }
+.az-eyebrow {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--tx-ink-2);
+}
+.az-display {
+  font-family: var(--font-serif); font-weight: 300; letter-spacing: -0.025em; line-height: 0.98;
+  font-size: clamp(40px, 7vw, 92px);
+}
+.az-display em { font-style: italic; font-weight: 400; }
+.az-h2 { font-family: var(--font-serif); font-weight: 300; letter-spacing: -0.02em; line-height: 1.02; font-size: clamp(30px, 4.4vw, 54px); margin: 0; }
+.az-lead { font-size: 17px; line-height: 1.6; color: var(--tx-ink-2); max-width: 50ch; }
+.az-lead strong { color: var(--tx-ink); font-weight: 600; }
+
+/* link with drawing underline (micro-interaction) */
+.az-ulink { color: var(--tx-ink); position: relative; }
+.az-ulink::after { content: ""; position: absolute; left: 0; bottom: -2px; height: 1px; width: 100%; background: currentColor; transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.4s var(--ease); }
+.az-ulink:hover::after { transform: scaleX(1); }
+
+/* buttons */
+.az-btn {
+  display: inline-flex; align-items: center; gap: 9px; justify-content: center;
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.02em;
+  padding: 13px 22px; border-radius: 2px; cursor: pointer;
+  background: var(--ink); color: var(--paper); border: 1px solid var(--ink);
+  transition: transform 0.25s var(--ease), background 0.25s, color 0.25s;
+}
+.az-btn:hover { transform: translateY(-2px); background: var(--aubergine); border-color: var(--aubergine); }
+.az-btn.acid { background: var(--chartreuse); color: var(--ink); border-color: var(--ink); }
+.az-btn.acid:hover { background: var(--ink); color: var(--chartreuse); }
+.az-btn.ghost { background: transparent; color: var(--ink); }
+.az-btn.ghost:hover { background: var(--ink); color: var(--paper); }
+.az-btn.lg { padding: 15px 26px; font-size: 14px; }
+
+/* ---- ticker (Aztec "NOW TRADING" → "NOW EXAMINING") ---- */
+.az-ticker { border-bottom: 1px solid var(--ink); background: var(--ink); color: var(--paper); overflow: hidden; }
+.az-ticker-inner { display: flex; align-items: center; gap: 0; height: 34px; }
+.az-ticker-tag { flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; height: 100%; background: var(--chartreuse); color: var(--ink); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+.az-ticker-tag .d { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); animation: az-blink 1.6s steps(2) infinite; }
+.az-marquee { flex: 1; overflow: hidden; white-space: nowrap; }
+.az-marquee-track { display: inline-flex; gap: 38px; padding-left: 38px; animation: az-scroll 38s linear infinite; font-family: var(--font-mono); font-size: 12px; color: var(--tx-paper-2); }
+.az-marquee-track span b { color: var(--chartreuse); font-weight: 500; }
+.az-marquee-track .blk { color: var(--vermillion); }
+.az-marquee-track .alw { color: var(--chartreuse); }
+
+/* ---- nav ---- */
+.az-nav { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--paper) 82%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid transparent; transition: border-color 0.3s, background 0.3s; }
+.az-nav.scrolled { border-bottom-color: var(--rule); }
+.az-nav-inner { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+.az-brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-serif); font-weight: 500; font-size: 19px; letter-spacing: -0.01em; color: var(--ink); }
+.az-nav-links { display: flex; align-items: center; gap: 26px; }
+.az-nav-links a { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; color: var(--tx-ink-2); }
+.az-progress { position: fixed; top: 0; left: 0; height: 2px; z-index: 60; transform-origin: 0 50%; background: var(--chartreuse); }
+
+/* ---- section scaffolding ---- */
+.az-section { padding: 110px 0 0; }
+.az-section.ink { background: var(--ink); color: var(--tx-paper); margin-top: 110px; padding: 96px 0 100px; }
+.az-section.ink .az-eyebrow { color: var(--chartreuse); }
+.az-section.ink .az-lead { color: var(--tx-paper-2); }
+.az-section.ink .az-lead strong, .az-section.ink .az-h2 { color: var(--tx-paper); }
+.az-rule { height: 1px; background: var(--rule); margin: 0; border: 0; }
+.az-section.ink .az-rule { background: var(--rule-ink); }
+.az-head { display: grid; gap: 16px; margin-bottom: 52px; max-width: 760px; }
+.az-num { font-family: var(--font-serif); font-style: italic; font-weight: 300; font-size: 15px; color: var(--tx-ink-2); }
+.az-section.ink .az-num { color: var(--chartreuse); }
+
+/* ---- hero ---- */
+.az-hero { padding: 70px 0 20px; }
+.az-hero-grid { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 56px; align-items: center; }
+.az-hero h1 { margin: 20px 0 0; }
+.az-hero .az-lead { margin-top: 26px; }
+.az-cta-row { display: flex; gap: 12px; margin-top: 34px; flex-wrap: wrap; }
+.az-hero-meta { margin-top: 30px; display: flex; gap: 26px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--tx-ink-3); text-transform: uppercase; }
+
+/* ---- illuminated verdict plate (the live firewall demo) ---- */
+.az-plate {
+  position: relative; background: var(--paper-2); color: var(--tx-ink);
+  border: 1px solid var(--ink); border-radius: 3px;
+  box-shadow: 10px 12px 0 -2px var(--ink);
+  padding: 26px;
+}
+.az-plate-frame { position: absolute; inset: 7px; border: 1px solid var(--rule); border-radius: 2px; pointer-events: none; }
+.az-plate-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.az-plate-kicker { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--tx-ink-2); }
+.az-plate-intent { font-family: var(--font-serif); font-style: italic; font-size: 14px; color: var(--tx-ink); }
+.az-picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
+.az-pick { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; padding: 5px 10px; border: 1px solid var(--rule); border-radius: 2px; background: transparent; color: var(--tx-ink-2); cursor: pointer; transition: border-color 0.2s, color 0.2s, background 0.2s; }
+.az-pick:hover { color: var(--ink); border-color: var(--ink); }
+.az-pick.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.az-plate-body { display: grid; grid-template-columns: 122px 1fr; gap: 22px; align-items: center; }
+.az-gauge { position: relative; width: 122px; height: 122px; display: grid; place-items: center; }
+.az-gauge svg { transform: rotate(-90deg); }
+.az-gauge-track { fill: none; stroke: var(--paper-3); stroke-width: 9; }
+.az-gauge-arc { fill: none; stroke-width: 9; stroke-linecap: butt; transition: stroke-dashoffset 0.8s var(--ease), stroke 0.4s; }
+.az-gauge-center { position: absolute; text-align: center; }
+.az-gauge-num { font-family: var(--font-serif); font-weight: 400; font-size: 34px; line-height: 1; }
+.az-gauge-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tx-ink-3); margin-top: 3px; }
+.az-verdict { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-serif); font-style: italic; font-size: 26px; }
+.az-verdict.allow { color: var(--malachite); }
+.az-verdict.block { color: var(--vermillion); }
+.az-reason { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--tx-ink-2); margin: 6px 0 12px; }
+.az-checks { display: grid; gap: 6px; }
+.az-check { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: var(--tx-ink-2); }
+.az-check .ic { width: 15px; height: 15px; display: grid; place-items: center; border-radius: 50%; flex: none; border: 1px solid currentColor; }
+.az-check.ok { color: var(--malachite); } .az-check.bad { color: var(--vermillion); }
+.az-check span.lbl { color: var(--tx-ink); }
+.az-plate-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.az-runbtn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; padding: 9px 14px; border-radius: 2px; cursor: pointer; background: var(--chartreuse); color: var(--ink); border: 1px solid var(--ink); transition: transform 0.2s var(--ease), background 0.2s, color 0.2s; }
+.az-runbtn:hover { transform: translateY(-1px); background: var(--ink); color: var(--chartreuse); }
+.az-runbtn:disabled { opacity: 0.6; cursor: progress; }
+/* wax seal for evidenceHash */
+.az-seal { display: flex; align-items: center; gap: 10px; }
+.az-seal-badge { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, var(--orchid), var(--aubergine)); color: var(--paper); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25); animation: az-stamp 0.5s var(--ease) both; }
+.az-seal-text { font-family: var(--font-mono); font-size: 10px; color: var(--tx-ink-2); line-height: 1.3; word-break: break-all; }
+.az-seal-text b { color: var(--tx-ink); }
+.az-dots { display: flex; gap: 5px; }
+.az-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--rule); }
+.az-dot.on { background: var(--ink); }
+
+/* ---- ledger (proof) on ink ---- */
+.az-ledger { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--rule-ink); border-bottom: 1px solid var(--rule-ink); }
+.az-ledger-cell { padding: 30px 26px; border-right: 1px solid var(--rule-ink); }
+.az-ledger-cell:last-child { border-right: 0; }
+.az-ledger-num { font-family: var(--font-serif); font-weight: 300; font-size: 46px; line-height: 1; color: var(--chartreuse); }
+.az-ledger-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--tx-paper-2); margin-top: 10px; text-transform: uppercase; }
+.az-ledger-cell a { color: var(--paper); font-family: var(--font-mono); font-size: 12px; }
+
+/* ---- the examination (numbered rite I–IV) ---- */
+.az-rite { display: grid; gap: 0; }
+.az-rite-row { display: grid; grid-template-columns: 120px 1fr; gap: 30px; padding: 30px 0; border-top: 1px solid var(--rule); align-items: baseline; transition: padding-left 0.3s var(--ease); }
+.az-rite-row:hover { padding-left: 12px; }
+.az-rite-row:last-child { border-bottom: 1px solid var(--rule); }
+.az-rite-roman { font-family: var(--font-serif); font-weight: 300; font-size: 56px; line-height: 0.9; color: transparent; -webkit-text-stroke: 1px var(--tx-ink-3); }
+.az-rite-row:hover .az-rite-roman { color: var(--chartreuse); -webkit-text-stroke-color: var(--ink); }
+.az-rite h3 { font-family: var(--font-serif); font-weight: 400; font-size: 24px; margin: 0 0 8px; }
+.az-rite p { margin: 0; max-width: 56ch; color: var(--tx-ink-2); font-size: 15px; line-height: 1.55; }
+.az-rite .az-mono { display: inline-block; margin-top: 10px; font-size: 11px; color: var(--tx-ink-3); letter-spacing: 0.08em; }
+
+/* ---- instruments (features) ---- */
+.az-instruments { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--rule); }
+.az-instrument { padding: 30px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); transition: background 0.3s; }
+.az-instrument:nth-child(3n) { border-right: 0; }
+.az-instrument:nth-child(n+4) { } /* keep bottom rules */
+.az-instrument:hover { background: var(--paper-2); }
+.az-instrument-ic { width: 40px; height: 40px; display: grid; place-items: center; color: var(--ink); border: 1px solid var(--ink); border-radius: 50%; margin-bottom: 18px; }
+.az-instrument h3 { font-family: var(--font-serif); font-weight: 400; font-size: 21px; margin: 0 0 9px; }
+.az-instrument p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--tx-ink-2); }
+
+/* ---- trials (benchmark) ---- */
+.az-trials { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.az-trial-list { display: grid; gap: 0; }
+.az-trial { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 0; border-top: 1px solid var(--rule-ink); font-family: var(--font-mono); font-size: 13px; }
+.az-trial:last-child { border-bottom: 1px solid var(--rule-ink); }
+.az-trial .v { font-family: var(--font-serif); font-style: italic; font-size: 15px; }
+.az-trial .v.alw { color: var(--chartreuse); } .az-trial .v.blk { color: var(--vermillion); }
+
+/* ---- builders (surfaces) ---- */
+.az-builders { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 28px; align-items: start; }
+.az-tabs { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.az-tab { display: flex; gap: 13px; align-items: flex-start; padding: 18px 4px; border-bottom: 1px solid var(--rule); background: transparent; cursor: pointer; text-align: left; transition: padding-left 0.25s var(--ease); }
+.az-tab:hover { padding-left: 8px; }
+.az-tab.active { padding-left: 12px; }
+.az-tab.active .az-tab-mark { background: var(--chartreuse); }
+.az-tab-mark { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--ink); margin-top: 4px; flex: none; }
+.az-tab strong { font-family: var(--font-serif); font-weight: 400; font-size: 18px; }
+.az-tab span { display: block; margin-top: 3px; font-size: 13px; color: var(--tx-ink-2); }
+.az-codecard { border: 1px solid var(--ink); border-radius: 3px; background: var(--ink); box-shadow: 8px 10px 0 -2px var(--aubergine); overflow: hidden; }
+.az-codecard-bar { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--rule-ink); }
+.az-codecard-bar .f { font-family: var(--font-mono); font-size: 12px; color: var(--chartreuse); }
+.az-code { margin: 0; padding: 20px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--tx-paper-2); white-space: pre; overflow-x: auto; }
+
+/* ---- closing manifesto ---- */
+.az-manifesto { text-align: center; padding: 120px 0; }
+.az-manifesto h2 { font-family: var(--font-serif); font-weight: 300; letter-spacing: -0.025em; line-height: 1.02; font-size: clamp(34px, 6vw, 76px); margin: 0 auto; max-width: 16ch; }
+.az-manifesto h2 em { font-style: italic; }
+.az-manifesto .az-cta-row { justify-content: center; margin-top: 38px; }
+.az-foot { border-top: 1px solid var(--rule); padding: 30px 0 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; color: var(--tx-ink-2); }
+
+/* ---- keyframes ---- */
+@keyframes az-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes az-blink { 50% { opacity: 0.2; } }
+@keyframes az-stamp { from { transform: scale(0.4) rotate(-12deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+
+/* ---- responsive ---- */
+@media (max-width: 920px) {
+  .az-hero-grid, .az-trials, .az-builders { grid-template-columns: 1fr; }
+  .az-ledger, .az-instruments { grid-template-columns: 1fr 1fr; }
+  .az-instrument:nth-child(3n) { border-right: 1px solid var(--rule); }
+  .az-instrument:nth-child(2n) { border-right: 0; }
+}
+@media (max-width: 600px) {
+  .az-container { padding: 0 20px; }
+  .az-section { padding-top: 80px; }
+  .az-ledger, .az-instruments { grid-template-columns: 1fr; }
+  .az-instrument { border-right: 0 !important; }
+  .az-plate-body { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .az-checks { text-align: left; }
+  .az-rite-row { grid-template-columns: 1fr; gap: 8px; }
+  .az-nav-links a:not(:last-child) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .az *, .az *::before, .az *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .az-marquee-track { animation: none; }
+}

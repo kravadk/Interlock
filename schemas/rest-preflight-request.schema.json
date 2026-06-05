@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interlock.firewall/schemas/rest-preflight-request.schema.json",
+  "title": "Interlock REST Preflight Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["to"],
+  "properties": {
+    "to": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Target contract address for the proposed transaction."
+    },
+    "value": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9]+$" },
+        { "type": "integer", "minimum": 0 }
+      ],
+      "description": "Native value in wei. Defaults to 0 when omitted."
+    },
+    "data": {
+      "type": "string",
+      "pattern": "^0x([a-fA-F0-9]{2})*$",
+      "description": "Full transaction calldata, not only the selector. Defaults to 0x when omitted."
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "route": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "expectedSlippageBps": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    }
+  }
+}

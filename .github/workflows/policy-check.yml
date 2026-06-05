@@ -1,0 +1,29 @@
+name: policy-check
+
+# Policy-as-code gate: lint policy packs on every PR that touches them, so an unsafe policy
+# (no targets, unlimited-approve, out-of-range slippage, wrong chain) is caught before merge.
+# Reusable via the composite action at .github/actions/policy-check.
+
+on:
+  pull_request:
+    paths:
+      - "policies/**"
+  workflow_dispatch:
+    inputs:
+      policy:
+        description: Policy pack JSON to lint
+        required: true
+        default: policies/conservative-defi.example.json
+
+permissions:
+  contents: read
+
+jobs:
+  lint-example-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint policy pack
+        uses: ./.github/actions/policy-check
+        with:
+          policy: ${{ github.event.inputs.policy || 'policies/conservative-defi.example.json' }}

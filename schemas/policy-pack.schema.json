@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interlock.firewall/schemas/policy-pack.schema.json",
+  "title": "Interlock Firewall Policy Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "maxNativeValue", "maxSlippageBps", "targets", "selectors"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": "interlock.policy.v1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "chainId": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxNativeValue": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Maximum native value in wei."
+    },
+    "maxSlippageBps": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["address"],
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "selectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["selector"],
+        "properties": {
+          "selector": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{8}$"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

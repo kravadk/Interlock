@@ -1,0 +1,42 @@
+{
+  "name": "@interlock/cli",
+  "version": "0.1.0",
+  "description": "Command line interface for Interlock Firewall setup, policy checks, policy packs, and Mantle Sepolia debugging.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "interlock",
+    "mantle",
+    "ai-agents",
+    "cli",
+    "policy"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "bin": {
+    "interlock": "dist/index.js"
+  },
+  "scripts": {
+    "prebuild": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
+    "build": "tsc -p tsconfig.json",
+    "start": "tsx src/index.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@interlock/firewall-sdk": "workspace:*",
+    "@interlock/shared": "workspace:*",
+    "viem": "^2.30.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

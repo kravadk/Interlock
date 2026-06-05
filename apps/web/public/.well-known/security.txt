@@ -1,0 +1,5 @@
+Contact: https://github.com/kravadk/interlock/security/advisories/new
+Policy: https://github.com/kravadk/interlock/blob/main/SECURITY.md
+Preferred-Languages: en, uk
+Canonical: https://interlock.dev/.well-known/security.txt
+Expires: 2027-06-02T00:00:00.000Z

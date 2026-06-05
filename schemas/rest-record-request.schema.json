@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interlock.firewall/schemas/rest-record-request.schema.json",
+  "title": "Interlock REST Record Request",
+  "$ref": "./rest-preflight-request.schema.json"
+}

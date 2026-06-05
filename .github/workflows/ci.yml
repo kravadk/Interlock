@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  verify:
+    name: Build, test, and smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Secret scan
+        run: pnpm security:secrets
+
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck and app build
+        run: pnpm check
+
+      - name: Test
+        run: pnpm test
+
+      - name: Coverage
+        run: pnpm test:coverage
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @interlock/web exec playwright install --with-deps chromium
+
+      - name: Web e2e
+        run: pnpm web:e2e
+
+      - name: Setup uv (for Slither)
+        uses: astral-sh/setup-uv@v5
+
+      - name: Slither static analysis
+        run: pnpm security:slither
+
+      - name: Full smoke suite
+        run: pnpm smoke:all

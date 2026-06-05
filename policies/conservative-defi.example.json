@@ -1,0 +1,37 @@
+{
+  "$schema": "../schemas/policy-pack.schema.json",
+  "version": "interlock.policy.v1",
+  "name": "Conservative DeFi Agent",
+  "description": "Low-spend DeFi policy for approved vault and router actions.",
+  "chainId": 5003,
+  "maxNativeValue": "20000000000000000",
+  "maxSlippageBps": 100,
+  "targets": [
+    {
+      "address": "0x1111111111111111111111111111111111111111",
+      "label": "Replace with approved vault or router"
+    }
+  ],
+  "selectors": [
+    {
+      "selector": "0x6e553f65",
+      "label": "ERC-4626 deposit"
+    },
+    {
+      "selector": "0x94bf804d",
+      "label": "ERC-4626 mint"
+    },
+    {
+      "selector": "0xd0e30db0",
+      "label": "demo vault deposit"
+    },
+    {
+      "selector": "0xd96073cf",
+      "label": "demo router swap"
+    }
+  ],
+  "notes": [
+    "Replace placeholder targets before importing on-chain.",
+    "Keep policy packs in version control and run policy-audit after deployment."
+  ]
+}

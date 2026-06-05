@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interlock.firewall/schemas/rest-preflight-response.schema.json",
+  "title": "Interlock REST Preflight Response",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ok", "status", "decision"],
+      "properties": {
+        "ok": { "const": true },
+        "status": { "enum": ["allowed", "blocked"] },
+        "decision": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["allowed", "decision", "reasonCode", "agentId", "policyId", "action", "simulation"],
+          "properties": {
+            "allowed": { "type": "boolean" },
+            "decision": { "enum": ["ALLOW", "BLOCK", "REVIEW"] },
+            "reasonCode": { "type": "string" },
+            "riskScore": { "type": "integer", "minimum": 0 },
+            "agentId": { "type": "string", "pattern": "^[0-9]+$" },
+            "policyId": { "type": "string", "pattern": "^[0-9]+$" },
+            "action": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["to", "value", "data"],
+              "properties": {
+                "to": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+                "value": { "type": "string", "pattern": "^[0-9]+$" },
+                "data": { "type": "string", "pattern": "^0x([a-fA-F0-9]{2})*$" }
+              }
+            },
+            "simulation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["success"],
+              "properties": {
+                "success": { "type": "boolean" },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        },
+        "attestationHash": {
+          "type": "string",
+          "pattern": "^0x[a-fA-F0-9]{64}$"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "status", "code", "message", "action"],
+      "properties": {
+        "ok": { "const": false },
+        "status": { "const": "error" },
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "action": { "type": "string" }
+      }
+    }
+  ]
+}

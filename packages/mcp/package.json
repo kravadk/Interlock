@@ -1,0 +1,43 @@
+{
+  "name": "@interlock/mcp",
+  "version": "0.1.0",
+  "description": "MCP server that lets AI agents call Interlock Control Plane pre-flight checks, policy reads, history, and decision recording on Mantle Sepolia.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "keywords": [
+    "interlock",
+    "mantle",
+    "mcp",
+    "ai-agents",
+    "preflight"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "bin": {
+    "interlock-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "prebuild": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "start": "tsx src/index.ts",
+    "test": "pnpm check"
+  },
+  "dependencies": {
+    "@interlock/firewall-sdk": "workspace:*",
+    "@interlock/shared": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "viem": "^2.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

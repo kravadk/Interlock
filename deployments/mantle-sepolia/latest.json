@@ -1,0 +1,37 @@
+{
+  "chain": "mantleSepolia",
+  "chainId": 5003,
+  "rpcUrl": "https://rpc.sepolia.mantle.xyz",
+  "deployedAt": "2026-05-31T13:12:07.845Z",
+  "deployer": "0x82736f84Ad234566180F902237e2Fb4c35177bDB",
+  "addresses": {
+    "agentRegistry": "0xa8d6f3478b683ee674ff5a9167e6838c589162b4",
+    "policyRegistry": "0x16a02f6ed0d3db730fd60d5c51ec99e7825e41e0",
+    "actionAttestation": "0xe95ae15769d4afb678360622ff4e7f9db7dd874d",
+    "actionAttestationV2": "0x6488c92049dcbb88a442d1bbf6e94bc137faf4a3",
+    "policyGuardedExecutor": "0xd12a01a676f66c7660119e1c9a0fe3521ccdd564",
+    "disputeEscrow": "0xcb463c978becd38e913fb4b063f1e0aff8e04210",
+    "attestorCommittee": "0x03e42606199f1832579941c9a947e8eb240d1cef",
+    "reputationOracle": "0x69acc876f018677f9ed4f54b183d1703edd9d120"
+  },
+  "compatibility": {
+    "policyRegistry": {
+      "version": "1.2.0",
+      "supportsPolicyEnumeration": true
+    }
+  },
+  "transactions": {
+    "agentRegistry": "0x7a24ddc28302fd112a4c81c2f5f87a2d2003567f7a9ed72f3a7c47ddc3a69e9f",
+    "policyRegistry": "0xcdccf3df53c9f153dad92441abd43cfdb33af129a46b31bd6b27ac44c2e85367",
+    "actionAttestation": "0x3b2183819f3bfaa05f203c8155ee52f2172103f291cdc9b9f6627bbfbfda3be3",
+    "actionAttestationV2": "0x16d34302118a12d58040ce7ee577caef3420ab2d56f769ab54a6186e2c5d6294",
+    "setActionAttestation": "0x85cd938316d2ac8f37bf2ebae909cbe93b13384f8094f808587ce80557ff9254"
+  },
+  "blocks": {
+    "agentRegistry": "39344216",
+    "policyRegistry": "39344219",
+    "actionAttestation": "39484074",
+    "actionAttestationV2": "39344223",
+    "setActionAttestation": "39484077"
+  }
+}

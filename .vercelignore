@@ -1,0 +1,39 @@
+# Vercel upload manifest. Vercel uses THIS file (not .gitignore) when present, so the live site
+# ships docs/ + CHANGELOG.md (the /docs and /changelog routes read them at build/runtime) even
+# though .gitignore intentionally hides all *.md from the public GitHub repo.
+#
+# Deploy from local with `vercel --prod` so these files are included in the upload.
+# Only build artifacts, dependencies, and secrets are excluded below.
+
+.git
+node_modules
+**/node_modules
+.next
+**/.next
+out
+**/dist
+.vercel
+.consumer-smoke
+
+# Secrets — never upload; Vercel uses its own dashboard env vars.
+.env
+.env.local
+*.log
+
+# Local data / build outputs / analysis artifacts (regenerated, not needed for the web build).
+coverage
+**/coverage
+artifacts
+reports
+broadcast
+cache
+**/cache
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.tsbuildinfo
+playwright-report
+test-results
+
+# Internal, non-English analysis notes — kept locally but never served on the public /docs site.
+docs/mantle-turing-test-product-analysis.md
