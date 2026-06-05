@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     autoDeploy: true
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build:packages && pnpm --filter @interlock/indexer build
+    buildCommand: pnpm install --frozen-lockfile && pnpm build:packages && pnpm --filter @interlock/indexer build
     startCommand: pnpm --filter @interlock/indexer start
     envVars:
       - key: NODE_VERSION
