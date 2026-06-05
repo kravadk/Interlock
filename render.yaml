@@ -26,4 +26,4 @@ services:
       - key: SYNC_INTERVAL_MS
         value: "60000"
       - key: INDEXER_BLOCK_CHUNK_SIZE
-        value: "9000"
+        value: "1000"
