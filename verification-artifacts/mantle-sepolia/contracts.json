@@ -1,0 +1,42 @@
+{
+  "chainId": "5003",
+  "compilerVersion": "v0.8.35+commit.47b9dedd",
+  "apiUrl": "https://api.etherscan.io/v2/api",
+  "settings": {
+    "evmVersion": "paris",
+    "viaIR": true,
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode.object",
+          "evm.deployedBytecode.object"
+        ]
+      }
+    }
+  },
+  "contracts": [
+    {
+      "label": "AgentRegistry",
+      "address": "0xa8d6f3478b683ee674ff5a9167e6838c589162b4",
+      "contractName": "AgentRegistry.sol:AgentRegistry",
+      "constructorArguments": ""
+    },
+    {
+      "label": "PolicyRegistry",
+      "address": "0x16a02f6ed0d3db730fd60d5c51ec99e7825e41e0",
+      "contractName": "PolicyRegistry.sol:PolicyRegistry",
+      "constructorArguments": "000000000000000000000000a8d6f3478b683ee674ff5a9167e6838c589162b4"
+    },
+    {
+      "label": "ActionAttestation",
+      "address": "0x6488c92049dcbb88a442d1bbf6e94bc137faf4a3",
+      "contractName": "ActionAttestation.sol:ActionAttestation",
+      "constructorArguments": "000000000000000000000000a8d6f3478b683ee674ff5a9167e6838c589162b400000000000000000000000016a02f6ed0d3db730fd60d5c51ec99e7825e41e0"
+    }
+  ]
+}

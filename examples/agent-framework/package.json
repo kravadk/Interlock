@@ -1,0 +1,21 @@
+{
+  "name": "@interlock/example-agent-framework",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm check",
+    "demo": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@interlock/firewall-sdk": "workspace:*",
+    "@interlock/shared": "workspace:*",
+    "viem": "^2.30.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

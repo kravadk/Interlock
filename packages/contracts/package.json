@@ -1,0 +1,31 @@
+{
+  "name": "@interlock/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm compile",
+    "check": "pnpm compile && pnpm audit:docs && tsc -p tsconfig.json --noEmit",
+    "compile": "tsx scripts/compile.ts",
+    "audit:docs": "tsx scripts/audit-docs-check.ts",
+    "lint:sol": "solhint contracts/**/*.sol",
+    "test": "pnpm compile && vitest run",
+    "test:coverage": "pnpm compile && vitest run --coverage",
+    "local:smoke": "tsx scripts/local-smoke.ts",
+    "live:smoke": "tsx scripts/live-smoke.ts",
+    "deploy:mantle-sepolia": "tsx scripts/deploy.ts"
+  },
+  "dependencies": {
+    "@interlock/shared": "workspace:*",
+    "ganache": "^7.9.2",
+    "solc": "^0.8.30",
+    "viem": "^2.30.0"
+  },
+  "devDependencies": {
+    "fast-check": "^4.8.0",
+    "solhint": "^6.2.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

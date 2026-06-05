@@ -1,0 +1,658 @@
+export const agentRegistryAbi = [
+  {
+    type: "event",
+    name: "AgentRegistered",
+    inputs: [
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "owner", type: "address", indexed: true },
+      { name: "metadataURI", type: "string", indexed: false },
+    ],
+  },
+  {
+    type: "function",
+    name: "registerAgent",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "metadataURI", type: "string" }],
+    outputs: [{ name: "agentId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "nextAgentId",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "setActionAttestation",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "newActionAttestation", type: "address" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "getAgent",
+    stateMutability: "view",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "owner", type: "address" },
+          { name: "metadataURI", type: "string" },
+          { name: "allowedActions", type: "uint256" },
+          { name: "blockedActions", type: "uint256" },
+          { name: "failedSimulations", type: "uint256" },
+          { name: "exists", type: "bool" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "function",
+    name: "ownerOf",
+    stateMutability: "view",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [{ name: "", type: "address" }],
+  },
+] as const;
+
+export const policyRegistryAbi = [
+  {
+    type: "event",
+    name: "PolicyCreated",
+    inputs: [
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "owner", type: "address", indexed: true },
+      { name: "maxNativeValue", type: "uint256", indexed: false },
+      { name: "maxSlippageBps", type: "uint16", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "PolicyUpdated",
+    inputs: [
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "maxNativeValue", type: "uint256", indexed: false },
+      { name: "maxSlippageBps", type: "uint16", indexed: false },
+      { name: "active", type: "bool", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "TargetPermissionUpdated",
+    inputs: [
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: true },
+      { name: "allowed", type: "bool", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "SelectorPermissionUpdated",
+    inputs: [
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "selector", type: "bytes4", indexed: true },
+      { name: "allowed", type: "bool", indexed: false },
+    ],
+  },
+  {
+    type: "function",
+    name: "createPolicy",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "maxNativeValue", type: "uint256" },
+      { name: "maxSlippageBps", type: "uint16" },
+      { name: "targets", type: "address[]" },
+      { name: "selectors", type: "bytes4[]" },
+    ],
+    outputs: [{ name: "policyId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "nextPolicyId",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "VERSION",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    type: "function",
+    name: "supportsPolicyEnumeration",
+    stateMutability: "pure",
+    inputs: [],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "updatePolicy",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "maxNativeValue", type: "uint256" },
+      { name: "maxSlippageBps", type: "uint16" },
+      { name: "active", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setTargetAllowed",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "allowed", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "setSelectorAllowed",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "selector", type: "bytes4" },
+      { name: "allowed", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "getPolicy",
+    stateMutability: "view",
+    inputs: [{ name: "policyId", type: "uint256" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "owner", type: "address" },
+          { name: "agentId", type: "uint256" },
+          { name: "maxNativeValue", type: "uint256" },
+          { name: "maxSlippageBps", type: "uint16" },
+          { name: "active", type: "bool" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "function",
+    name: "isTargetAllowed",
+    stateMutability: "view",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "isSelectorAllowed",
+    stateMutability: "view",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "selector", type: "bytes4" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "getAllowedTargets",
+    stateMutability: "view",
+    inputs: [{ name: "policyId", type: "uint256" }],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    type: "function",
+    name: "getAllowedSelectors",
+    stateMutability: "view",
+    inputs: [{ name: "policyId", type: "uint256" }],
+    outputs: [{ name: "", type: "bytes4[]" }],
+  },
+] as const;
+
+export const actionAttestationAbi = [
+  {
+    type: "function",
+    name: "recordAction",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "calldataHash", type: "bytes32" },
+      { name: "selector", type: "bytes4" },
+      { name: "simulationHash", type: "bytes32" },
+      { name: "evidenceHash", type: "bytes32" },
+      { name: "decision", type: "uint8" },
+      { name: "reasonCode", type: "uint8" },
+      { name: "deadline", type: "uint256" },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [{ name: "actionCheckId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "challenge",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "actionCheckId", type: "uint256" },
+      { name: "reason", type: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "finalize",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "attestor",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "setAttestor",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "newAttestor", type: "address" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "nonces",
+    stateMutability: "view",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "DISPUTE_WINDOW",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "DOMAIN_SEPARATOR",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "getActionCheck",
+    stateMutability: "view",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "agentId", type: "uint256" },
+          { name: "policyId", type: "uint256" },
+          { name: "target", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "calldataHash", type: "bytes32" },
+          { name: "selector", type: "bytes4" },
+          { name: "simulationHash", type: "bytes32" },
+          { name: "evidenceHash", type: "bytes32" },
+          { name: "decision", type: "uint8" },
+          { name: "reasonCode", type: "uint8" },
+          { name: "timestamp", type: "uint256" },
+          { name: "status", type: "uint8" },
+          { name: "finalizableAt", type: "uint256" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "event",
+    name: "ActionChecked",
+    inputs: [
+      { name: "actionCheckId", type: "uint256", indexed: true },
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: false },
+      { name: "value", type: "uint256", indexed: false },
+      { name: "calldataHash", type: "bytes32", indexed: false },
+      { name: "selector", type: "bytes4", indexed: false },
+      { name: "simulationHash", type: "bytes32", indexed: false },
+      { name: "decision", type: "uint8", indexed: false },
+      { name: "reasonCode", type: "uint8", indexed: false },
+      { name: "timestamp", type: "uint256", indexed: false },
+      { name: "status", type: "uint8", indexed: false },
+      { name: "finalizableAt", type: "uint256", indexed: false },
+      { name: "evidenceHash", type: "bytes32", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ActionChallenged",
+    inputs: [
+      { name: "actionCheckId", type: "uint256", indexed: true },
+      { name: "challenger", type: "address", indexed: true },
+      { name: "reason", type: "string", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ActionFinalized",
+    inputs: [{ name: "actionCheckId", type: "uint256", indexed: true }],
+  },
+] as const;
+
+export const testStrategyVaultAbi = [
+  {
+    type: "event",
+    name: "StrategyDeposit",
+    inputs: [
+      { name: "caller", type: "address", indexed: true },
+      { name: "receiver", type: "address", indexed: true },
+      { name: "assets", type: "uint256", indexed: false },
+      { name: "shares", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "function",
+    name: "NAME",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    type: "function",
+    name: "asset",
+    stateMutability: "pure",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "maxDeposit",
+    stateMutability: "pure",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "previewDeposit",
+    stateMutability: "pure",
+    inputs: [{ name: "assets", type: "uint256" }],
+    outputs: [{ name: "shares", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "depositFor",
+    stateMutability: "payable",
+    inputs: [{ name: "receiver", type: "address" }],
+    outputs: [{ name: "shares", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "shares", type: "uint256" },
+      { name: "receiver", type: "address" },
+    ],
+    outputs: [{ name: "assets", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "totalAssets",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "sharesOf",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+export const testStrategyRouterAbi = [
+  {
+    type: "function",
+    name: "MAX_TEST_SLIPPAGE_BPS",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint16" }],
+  },
+  {
+    type: "function",
+    name: "routeNativeDeposit",
+    stateMutability: "payable",
+    inputs: [
+      { name: "vault", type: "address" },
+      { name: "receiver", type: "address" },
+      { name: "maxSlippageBps", type: "uint16" },
+    ],
+    outputs: [{ name: "shares", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "quoteNativeDeposit",
+    stateMutability: "view",
+    inputs: [
+      { name: "vault", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    outputs: [{ name: "shares", type: "uint256" }],
+  },
+] as const;
+
+export const policyGuardedExecutorAbi = [
+  {
+    type: "function",
+    name: "execute",
+    stateMutability: "payable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "data", type: "bytes" },
+    ],
+    outputs: [{ name: "", type: "bytes" }],
+  },
+  {
+    type: "function",
+    name: "previewExecute",
+    stateMutability: "view",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "data", type: "bytes" },
+    ],
+    outputs: [
+      { name: "allowed", type: "bool" },
+      { name: "reasonCode", type: "uint8" },
+    ],
+  },
+  {
+    type: "function",
+    name: "policyRegistry",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "event",
+    name: "ActionEnforced",
+    inputs: [
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: true },
+      { name: "value", type: "uint256", indexed: false },
+      { name: "selector", type: "bytes4", indexed: false },
+      { name: "caller", type: "address", indexed: false },
+    ],
+  },
+  { type: "error", name: "NotPolicyOwner", inputs: [] },
+  { type: "error", name: "ValueMismatch", inputs: [] },
+  { type: "error", name: "InactivePolicy", inputs: [] },
+  { type: "error", name: "PolicyAgentMismatch", inputs: [] },
+  { type: "error", name: "TargetNotAllowed", inputs: [] },
+  { type: "error", name: "SelectorNotAllowed", inputs: [] },
+  { type: "error", name: "ValueLimitExceeded", inputs: [] },
+  { type: "error", name: "ExecutionFailed", inputs: [{ name: "returnData", type: "bytes" }] },
+  { type: "error", name: "Reentrancy", inputs: [] },
+  { type: "error", name: "ZeroAddress", inputs: [] },
+] as const;
+
+export const disputeEscrowAbi = [
+  {
+    type: "function",
+    name: "bondRecord",
+    stateMutability: "payable",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "openDispute",
+    stateMutability: "payable",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "resolve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "actionCheckId", type: "uint256" },
+      { name: "challengerWins", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "reclaimRecordBond",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [],
+  },
+  { type: "function", name: "withdraw", stateMutability: "nonpayable", inputs: [], outputs: [] },
+  {
+    type: "function",
+    name: "withdrawable",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  { type: "function", name: "arbiter", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address" }] },
+  { type: "function", name: "DISPUTE_WINDOW", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "uint256" }] },
+  {
+    type: "function",
+    name: "getDispute",
+    stateMutability: "view",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "status", type: "uint8" },
+          { name: "recorder", type: "address" },
+          { name: "recorderBond", type: "uint256" },
+          { name: "challenger", type: "address" },
+          { name: "challengerBond", type: "uint256" },
+          { name: "bondedAt", type: "uint256" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "event",
+    name: "RecordBonded",
+    inputs: [
+      { name: "actionCheckId", type: "uint256", indexed: true },
+      { name: "recorder", type: "address", indexed: true },
+      { name: "bond", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "DisputeOpened",
+    inputs: [
+      { name: "actionCheckId", type: "uint256", indexed: true },
+      { name: "challenger", type: "address", indexed: true },
+      { name: "bond", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "DisputeResolved",
+    inputs: [
+      { name: "actionCheckId", type: "uint256", indexed: true },
+      { name: "challengerWins", type: "bool", indexed: false },
+      { name: "winner", type: "address", indexed: true },
+      { name: "payout", type: "uint256", indexed: false },
+    ],
+  },
+] as const;
+
+export const attestorCommitteeAbi = [
+  {
+    type: "function",
+    name: "isApproved",
+    stateMutability: "view",
+    inputs: [
+      { name: "digest", type: "bytes32" },
+      { name: "signatures", type: "bytes[]" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  { type: "function", name: "threshold", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "uint256" }] },
+  { type: "function", name: "memberCount", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "uint256" }] },
+  { type: "function", name: "members", stateMutability: "view", inputs: [], outputs: [{ name: "", type: "address[]" }] },
+  {
+    type: "function",
+    name: "isMember",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+export const reputationOracleAbi = [
+  {
+    type: "function",
+    name: "getScore",
+    stateMutability: "view",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [
+      { name: "scoreBps", type: "uint256" },
+      { name: "tier", type: "uint8" },
+    ],
+  },
+  {
+    type: "function",
+    name: "meetsThreshold",
+    stateMutability: "view",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "minScoreBps", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;

@@ -1,0 +1,46 @@
+node_modules/
+.next/
+dist/
+out/
+cache/
+artifacts/
+broadcast/
+coverage/
+
+# Keep these locally (and any future ones) but never publish to GitHub: runtime logs,
+# static-analysis reports, and test output. Only the root README is public (see *.md below).
+logs/
+reports/
+test-results/
+**/test-results/
+m2/
+.env
+.env.local
+*.log
+*.pid
+*.tsbuildinfo
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.consumer-smoke/
+.codex-*
+dashboard-qa.png
+release-artifacts/
+
+.vercel
+
+# Publish product docs, but keep one-off local research/planning notes out unless explicitly added.
+*.md
+!/README.md
+!/CHANGELOG.md
+!/SECURITY.md
+!/docs/**/*.md
+!/packages/**/README.md
+!/apps/**/README.md
+!/examples/**/README.md
+!/policies/**/*.md
+Hackathon_Idea_Research.md
+PLAN.md
+
+# Test files are intentionally PUBLIC on GitHub (they demonstrate depth + coverage to reviewers).
+# Only generated test OUTPUT stays hidden (test-results/ above).

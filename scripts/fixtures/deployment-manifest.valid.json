@@ -1,0 +1,30 @@
+{
+  "chain": "mantleSepolia",
+  "chainId": 5003,
+  "rpcUrl": "https://rpc.sepolia.mantle.xyz",
+  "deployedAt": "2026-05-29T10:02:38.459Z",
+  "deployer": "0x82736f84Ad234566180F902237e2Fb4c35177bDB",
+  "addresses": {
+    "agentRegistry": "0xe4dfef03e107225f2239cfff955a378a9a8158be",
+    "policyRegistry": "0xec7608730978b68a8d8c36b5d1f131634621116d",
+    "actionAttestation": "0x347fb466f3c9bc031560b49973ec05bdadd2d4c4"
+  },
+  "compatibility": {
+    "policyRegistry": {
+      "version": "1.2.0",
+      "supportsPolicyEnumeration": true
+    }
+  },
+  "transactions": {
+    "agentRegistry": "0xf04e367d4fd151a613eab44d1dec82875b4d1f0866bbbd7418764f9957c5e593",
+    "policyRegistry": "0x90aa22131c7de4e9935dca68994c420845446da08f76f9b29a4d8439e21df0fc",
+    "actionAttestation": "0xa7ff4bccc9babc435081cae7b788ce9972fe1835435bf827f42ebbd11fe07a63",
+    "setActionAttestation": "0xff45a1577de2aaf8b3bd57a26b0376d1c973f80fe7dbd00191889e0baf04e798"
+  },
+  "blocks": {
+    "agentRegistry": "39252126",
+    "policyRegistry": "39252129",
+    "actionAttestation": "39252133",
+    "setActionAttestation": "39252142"
+  }
+}

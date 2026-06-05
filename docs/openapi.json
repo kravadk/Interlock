@@ -1,0 +1,205 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Interlock Recorder API",
+    "version": "0.1.0",
+    "description": "Read API for Interlock Control Plane status, evidence, benchmark, and analytics."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8787"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Recorder health and sync state",
+        "responses": {
+          "200": {
+            "description": "Health status"
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Full control-plane status",
+        "responses": {
+          "200": {
+            "description": "Network, contracts, sync, records, latest evidence, and webhook state"
+          }
+        }
+      }
+    },
+    "/network": {
+      "get": {
+        "summary": "Compact public network status",
+        "responses": {
+          "200": {
+            "description": "Network and deployment summary"
+          }
+        }
+      }
+    },
+    "/agents": {
+      "get": {
+        "summary": "List indexed agents",
+        "responses": {
+          "200": {
+            "description": "Agents"
+          }
+        }
+      }
+    },
+    "/agents/{id}": {
+      "get": {
+        "summary": "Get one indexed agent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agent"
+          }
+        }
+      }
+    },
+    "/agents/{id}/actions": {
+      "get": {
+        "summary": "List actions for one agent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actions"
+          }
+        }
+      }
+    },
+    "/policies": {
+      "get": {
+        "summary": "List indexed policies",
+        "responses": {
+          "200": {
+            "description": "Policies"
+          }
+        }
+      }
+    },
+    "/policies/{id}": {
+      "get": {
+        "summary": "Get one indexed policy",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Policy"
+          }
+        }
+      }
+    },
+    "/benchmark/{agentId}": {
+      "get": {
+        "summary": "Get benchmark summary for one agent",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Benchmark"
+          }
+        }
+      }
+    },
+    "/analytics": {
+      "get": {
+        "summary": "Global Recorder analytics",
+        "responses": {
+          "200": {
+            "description": "Analytics summary"
+          }
+        }
+      }
+    },
+    "/analytics/agents/{id}": {
+      "get": {
+        "summary": "Agent-scoped Recorder analytics",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics summary"
+          }
+        }
+      }
+    },
+    "/analytics/policies/{id}": {
+      "get": {
+        "summary": "Policy-scoped Recorder analytics",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics summary"
+          }
+        }
+      }
+    },
+    "/sync": {
+      "post": {
+        "summary": "Manually sync indexed events",
+        "responses": {
+          "200": {
+            "description": "Sync result"
+          }
+        }
+      }
+    }
+  }
+}

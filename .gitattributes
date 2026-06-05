@@ -1,0 +1,20 @@
+# Normalize line endings to LF across platforms (repo is developed on Windows).
+* text=auto eol=lf
+
+# Treat known binary assets as binary (never normalize).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Text assets that should stay LF.
+*.svg text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Generated/lock files - keep diffs out of review noise.
+pnpm-lock.yaml linguist-generated=true

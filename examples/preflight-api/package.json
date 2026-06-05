@@ -1,0 +1,20 @@
+{
+  "name": "@interlock/example-preflight-api",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "demo": "tsx src/index.ts",
+    "serve": "tsx src/index.ts --serve",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@interlock/firewall-sdk": "workspace:*",
+    "@interlock/shared": "workspace:*",
+    "viem": "^2.30.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

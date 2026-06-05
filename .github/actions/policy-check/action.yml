@@ -1,0 +1,38 @@
+name: Interlock Policy Check
+description: Lint an Interlock policy pack JSON (policy-as-code) for risky or incomplete configuration.
+
+inputs:
+  policy:
+    description: Path to the policy pack JSON file to lint.
+    required: true
+  fail-on-warning:
+    description: Fail the check on warnings, not just errors.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10.32.1
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+    - run: pnpm build:packages
+      shell: bash
+    - name: Lint policy
+      shell: bash
+      run: |
+        out=$(node packages/cli/dist/index.js policy-lint --file "${{ inputs.policy }}" --no-fail)
+        echo "$out"
+        errors=$(echo "$out" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s);console.log(r.errors)})")
+        warnings=$(echo "$out" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s);console.log(r.warnings)})")
+        if [ "$errors" -gt 0 ]; then echo "::error::Policy lint found $errors error(s)."; exit 1; fi
+        if [ "${{ inputs.fail-on-warning }}" = "true" ] && [ "$warnings" -gt 0 ]; then
+          echo "::error::Policy lint found $warnings warning(s) (fail-on-warning)."; exit 1
+        fi
+        echo "Policy lint passed ($warnings warning(s))."
