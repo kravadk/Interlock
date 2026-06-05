@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: interlock-recorder
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build:packages && pnpm --filter @interlock/indexer build
+    startCommand: pnpm --filter @interlock/indexer start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: PNPM_VERSION
+        value: 10.32.1
+      - key: MANTLE_RPC_URL
+        value: https://rpc.sepolia.mantle.xyz
+      - key: AGENT_REGISTRY
+        value: 0xa8d6f3478b683ee674ff5a9167e6838c589162b4
+      - key: POLICY_REGISTRY
+        value: 0x16a02f6ed0d3db730fd60d5c51ec99e7825e41e0
+      - key: ACTION_ATTESTATION
+        value: 0xe95ae15769d4afb678360622ff4e7f9db7dd874d
+      - key: FROM_BLOCK
+        value: "39484074"
+      - key: AUTO_SYNC
+        value: "true"
+      - key: SYNC_INTERVAL_MS
+        value: "60000"
+      - key: INDEXER_BLOCK_CHUNK_SIZE
+        value: "9000"

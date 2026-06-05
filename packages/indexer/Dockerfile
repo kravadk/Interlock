@@ -16,16 +16,16 @@ COPY packages/shared/package.json packages/shared/
 COPY packages/indexer/package.json packages/indexer/
 
 # Install deps for just the two packages the indexer needs.
-RUN pnpm install --filter @agentops/indexer... --frozen-lockfile
+RUN pnpm install --filter @interlock/indexer... --frozen-lockfile
 
 # Copy sources and build shared + indexer to dist/.
 COPY packages/shared packages/shared
 COPY packages/indexer packages/indexer
-RUN pnpm --filter @agentops/shared build && pnpm --filter @agentops/indexer build
+RUN pnpm --filter @interlock/shared build && pnpm --filter @interlock/indexer build
 
 EXPOSE 8787
-# Persist the SQLite DB on a mounted volume in production: -v agentops-db:/data
-ENV INDEXER_DB_PATH=/data/agentops-indexer.sqlite
+# Persist the SQLite DB on a mounted volume in production: -v interlock-db:/data
+ENV INDEXER_DB_PATH=/data/interlock-indexer.sqlite
 VOLUME ["/data"]
 
 WORKDIR /app/packages/indexer
