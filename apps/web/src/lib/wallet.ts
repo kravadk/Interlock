@@ -19,6 +19,7 @@ import {
   policyRegistryAbi,
   ReasonCode,
 } from "@interlock/shared";
+import { registerErc8004Agent } from "@interlock/firewall-sdk";
 import { PendingTransactionError } from "./tx-error";
 import { mantleRpcUrl } from "./contracts";
 
@@ -496,6 +497,27 @@ export async function setSelectorAllowedFromWallet(input: SetSelectorAllowedInpu
   return txHash;
 }
 
+/**
+ * Register the connected wallet's agent into the OFFICIAL ERC-8004 IdentityRegistry (mints a
+ * standard agent NFT whose agentURI points at the registration manifest). On-chain write; the
+ * caller confirms the wallet prompt. Returns the tx hash.
+ */
+export async function registerErc8004FromWallet(input: {
+  account: Address;
+  identityRegistry: Address;
+  agentURI: string;
+}): Promise<{ txHash: Hex }> {
+  const walletClient = walletClientFor(input.account);
+  const txHash = await registerErc8004Agent({
+    walletClient,
+    account: input.account,
+    identityRegistry: input.identityRegistry,
+    agentURI: input.agentURI,
+  });
+  await waitForConfirmedReceipt(txHash);
+  return { txHash };
+}
+
 function walletClientFor(account: Address) {
   const provider = requireProvider();
   return createWalletClient({
@@ -524,6 +546,21 @@ async function waitForConfirmedReceipt(txHash: Hex): Promise<TransactionReceipt>
     throw error;
   }
   if (receipt.status === "reverted") {
+    // The tx mined but reverted. Re-run it at the mined block so viem surfaces the actual revert
+    // reason (Error(string) reasons are decoded directly; custom-error data flows to tx-error.ts
+    // for name decoding). Never throw the bare receipt message if we can recover the cause.
+    try {
+      const tx = await publicClient().getTransaction({ hash: txHash });
+      await publicClient().call({
+        account: tx.from,
+        to: tx.to ?? undefined,
+        data: tx.input,
+        value: tx.value,
+        blockNumber: receipt.blockNumber,
+      });
+    } catch (revertCause) {
+      throw revertCause;
+    }
     throw new Error(`Transaction reverted on-chain: ${txHash}`);
   }
   return receipt;

@@ -139,16 +139,19 @@ export type ActionProposal = {
   updatedAt: string;
 };
 
+// Mirrors the indexer wire contract (packages/indexer/src/types.ts YieldDataPoint):
+// pools are keyed by `poolId`, and chain/symbol are optional because DefiLlama does
+// not guarantee them. Keep these in lockstep with the indexer to avoid render bugs.
 export type YieldDataPoint = {
-  id: string;
   source: string;
-  project: string;
-  chain: string;
   poolId: string;
-  symbol: string;
+  project: string;
+  chain?: string;
+  symbol?: string;
   tvlUsd?: number;
   apy?: number;
-  underlyingTokens: `0x${string}`[];
+  apyBase?: number;
+  apyReward?: number;
   riskNotes: string[];
   fetchedAt: string;
 };

@@ -37,7 +37,6 @@ Contracts:
 - Dashboard: [https://mantle-nine-beta.vercel.app](https://mantle-nine-beta.vercel.app). Use this hosted URL for the judge-facing submission. Local demo remains available at `http://127.0.0.1:3000` for recording or debugging.
 - Documentation entrypoint: `README.md`.
 - Product logic: `docs/product-logic.md`.
-- Competitive landscape: `docs/competitive-landscape.md`.
 - Demo runbook: `docs/demo-runbook.md`.
 - Hosting runbook: `docs/hosting.md`.
 - Contract verification: `docs/contract-verification.md`.

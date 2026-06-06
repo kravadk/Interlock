@@ -1,6 +1,27 @@
-import { getAddress, type Address, type Hex, type PublicClient } from "viem";
+import { getAddress, type Account, type Address, type Hex, type PublicClient, type WalletClient } from "viem";
 
+// ABIs target the canonical ERC-8004 ("Trustless Agents") interface as defined by EIP-8004
+// (https://eips.ethereum.org/EIPS/eip-8004) and deployed by mantlenetworkio on Mantle. Reads
+// degrade gracefully (callers catch), and writes are user-owned + approval-gated — confirm the
+// live contract ABI on Mantlescan before a production write if the standard has since evolved.
 export const erc8004IdentityRegistryAbi = [
+  {
+    type: "function",
+    name: "register",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "agentURI", type: "string" }],
+    outputs: [{ name: "agentId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "setAgentURI",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "newURI", type: "string" },
+    ],
+    outputs: [],
+  },
   {
     type: "function",
     name: "ownerOf",
@@ -27,16 +48,32 @@ export const erc8004IdentityRegistryAbi = [
 export const erc8004ReputationRegistryAbi = [
   {
     type: "function",
+    name: "giveFeedback",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "value", type: "int128" },
+      { name: "valueDecimals", type: "uint8" },
+      { name: "tag1", type: "string" },
+      { name: "tag2", type: "string" },
+      { name: "endpoint", type: "string" },
+      { name: "feedbackURI", type: "string" },
+      { name: "feedbackHash", type: "bytes32" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "getSummary",
     stateMutability: "view",
     inputs: [
       { name: "agentId", type: "uint256" },
       { name: "clientAddresses", type: "address[]" },
-      { name: "tag1", type: "bytes32" },
-      { name: "tag2", type: "bytes32" },
+      { name: "tag1", type: "string" },
+      { name: "tag2", type: "string" },
     ],
     outputs: [
-      { name: "count", type: "uint256" },
+      { name: "count", type: "uint64" },
       { name: "summaryValue", type: "int128" },
       { name: "summaryValueDecimals", type: "uint8" },
     ],
@@ -107,20 +144,99 @@ export async function getErc8004ReputationSummary(input: {
   reputationRegistry: Address;
   agentId: bigint;
   clientAddresses: Address[];
-  tag1?: Hex;
-  tag2?: Hex;
+  tag1?: string;
+  tag2?: string;
 }): Promise<{ count: string; summaryValue: string; summaryValueDecimals: number }> {
   const [count, summaryValue, summaryValueDecimals] = (await input.publicClient.readContract({
     address: input.reputationRegistry,
     abi: erc8004ReputationRegistryAbi,
     functionName: "getSummary",
-    args: [input.agentId, input.clientAddresses, input.tag1 ?? zeroBytes32(), input.tag2 ?? zeroBytes32()],
+    args: [input.agentId, input.clientAddresses, input.tag1 ?? "", input.tag2 ?? ""],
   })) as [bigint, bigint, number];
   return {
     count: count.toString(),
     summaryValue: summaryValue.toString(),
     summaryValueDecimals: Number(summaryValueDecimals),
   };
+}
+
+/**
+ * Register an Interlock-protected agent into the OFFICIAL ERC-8004 IdentityRegistry, minting a
+ * standard agent NFT whose `agentURI` points at the agent's registration manifest. On-chain write
+ * (gas), user-owned + approval-gated. Returns the tx hash; read the minted agentId from the receipt.
+ */
+export async function registerErc8004Agent(input: {
+  walletClient: WalletClient;
+  account: Account | Address;
+  identityRegistry: Address;
+  agentURI: string;
+  chain?: WalletClient["chain"];
+}): Promise<Hex> {
+  return input.walletClient.writeContract({
+    address: input.identityRegistry,
+    abi: erc8004IdentityRegistryAbi,
+    functionName: "register",
+    args: [input.agentURI],
+    account: input.account,
+    chain: input.chain ?? input.walletClient.chain,
+  });
+}
+
+/** Update the `agentURI` (registration manifest pointer) of an already-registered ERC-8004 agent. */
+export async function setErc8004AgentUri(input: {
+  walletClient: WalletClient;
+  account: Account | Address;
+  identityRegistry: Address;
+  agentId: bigint;
+  newURI: string;
+  chain?: WalletClient["chain"];
+}): Promise<Hex> {
+  return input.walletClient.writeContract({
+    address: input.identityRegistry,
+    abi: erc8004IdentityRegistryAbi,
+    functionName: "setAgentURI",
+    args: [input.agentId, input.newURI],
+    account: input.account,
+    chain: input.chain ?? input.walletClient.chain,
+  });
+}
+
+/**
+ * Publish an Interlock reputation signal as standard ERC-8004 feedback in the official
+ * ReputationRegistry. `value`/`valueDecimals` are fixed-point (e.g. a pass-rate score). Tags let
+ * consumers filter (e.g. "interlock", "firewall"). On-chain write, user-owned + approval-gated.
+ */
+export async function giveErc8004Feedback(input: {
+  walletClient: WalletClient;
+  account: Account | Address;
+  reputationRegistry: Address;
+  agentId: bigint;
+  value: bigint;
+  valueDecimals: number;
+  tag1?: string;
+  tag2?: string;
+  endpoint?: string;
+  feedbackURI?: string;
+  feedbackHash?: Hex;
+  chain?: WalletClient["chain"];
+}): Promise<Hex> {
+  return input.walletClient.writeContract({
+    address: input.reputationRegistry,
+    abi: erc8004ReputationRegistryAbi,
+    functionName: "giveFeedback",
+    args: [
+      input.agentId,
+      input.value,
+      input.valueDecimals,
+      input.tag1 ?? "interlock",
+      input.tag2 ?? "",
+      input.endpoint ?? "",
+      input.feedbackURI ?? "",
+      input.feedbackHash ?? zeroBytes32(),
+    ],
+    account: input.account,
+    chain: input.chain ?? input.walletClient.chain,
+  });
 }
 
 export function buildErc8004AgentManifest(input: {

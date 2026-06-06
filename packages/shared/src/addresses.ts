@@ -24,5 +24,12 @@ export const deployedAddresses: { mantleSepolia: InterlockDeploymentAddresses } 
     disputeEscrow: "0xcb463c978becd38e913fb4b063f1e0aff8e04210" as Address,
     attestorCommittee: "0x03e42606199f1832579941c9a947e8eb240d1cef" as Address,
     reputationOracle: "0x69acc876f018677f9ed4f54b183d1703edd9d120" as Address,
+    // Official ERC-8004 "Trustless Agents" registries — verified-deployed by mantlenetworkio on
+    // Mantle (mainnet + Sepolia share these addresses). NOT Interlock-owned and NOT placeholders:
+    // https://github.com/mantlenetworkio/erc-8004-contracts. Interlock reads identity + reputation
+    // from these and can register Interlock agents into the official IdentityRegistry. Env vars
+    // ERC8004_IDENTITY_REGISTRY / ERC8004_REPUTATION_REGISTRY override for other chains/forks.
+    erc8004IdentityRegistry: "0x8004A3718bD35CF767BC0E718bf21Ec4073502f0" as Address,
+    erc8004ReputationRegistry: "0x8004B1BcAb4228199Af728fF90Ed23dCc9b0Fa63" as Address,
   },
 };

@@ -299,6 +299,32 @@ server.tool(
 );
 
 server.tool(
+  "interlock_register_erc8004_identity",
+  "Register an Interlock agent into the OFFICIAL ERC-8004 IdentityRegistry on Mantle Sepolia (mints a standard agent NFT). Requires PRIVATE_KEY in the MCP server environment. On-chain write (gas).",
+  {
+    agentURI: z.string().min(1).describe("Pointer to the agent's registration manifest (URL or data URI)."),
+    identityRegistry: addressSchema("identityRegistry").optional(),
+  },
+  async ({ agentURI, identityRegistry }) => {
+    if (!process.env.PRIVATE_KEY) {
+      return textResult({
+        ok: false,
+        code: "PRIVATE_KEY_REQUIRED",
+        message: "Registering an ERC-8004 identity requires PRIVATE_KEY in the MCP server environment.",
+      });
+    }
+    const registry = identityRegistry ? getAddress(identityRegistry) : undefined;
+    try {
+      const firewall = createFirewall();
+      const txHash = await firewall.registerErc8004Identity(agentURI, registry);
+      return textResult({ ok: true, txHash, registry: registry ?? deployedAddresses.mantleSepolia.erc8004IdentityRegistry });
+    } catch (error) {
+      return textResult({ ok: false, code: "ERC8004_REGISTER_FAILED", message: error instanceof Error ? error.message : String(error) });
+    }
+  },
+);
+
+server.tool(
   "interlock_build_erc8004_manifest",
   "Build an ERC-8004-compatible agent manifest that links an Interlock agent to MCP/dashboard services.",
   {

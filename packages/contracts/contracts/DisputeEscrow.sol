@@ -71,6 +71,8 @@ contract DisputeEscrow {
         _locked = false;
     }
 
+    /// @notice Set the arbiter who resolves disputes. Owner-only.
+    /// @param newArbiter The new arbiter address (non-zero).
     function setArbiter(address newArbiter) external {
         if (msg.sender != owner) revert NotOwner();
         if (newArbiter == address(0)) revert ZeroAddress();
@@ -136,6 +138,9 @@ contract DisputeEscrow {
         emit Withdrawn(msg.sender, amount);
     }
 
+    /// @notice Read the dispute state (status, bonds, parties) for an attestation id.
+    /// @param actionCheckId The attestation id the dispute is keyed by.
+    /// @return The stored Dispute record.
     function getDispute(uint256 actionCheckId) external view returns (Dispute memory) {
         return disputes[actionCheckId];
     }

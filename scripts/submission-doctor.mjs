@@ -45,8 +45,6 @@ const requiredFiles = [
   "docs/api-reference.md",
   "docs/architecture.md",
   "docs/product-logic.md",
-  "docs/competitive-analysis.md",
-  "docs/competitive-landscape.md",
   "docs/mcp.md",
   "docs/benchmark-arena.md",
   "docs/deployment.md",

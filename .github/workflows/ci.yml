@@ -57,5 +57,9 @@ jobs:
       - name: Slither static analysis
         run: pnpm security:slither
 
+      - name: Solhint (advisory)
+        run: pnpm --filter @interlock/contracts lint:sol
+        continue-on-error: true
+
       - name: Full smoke suite
         run: pnpm smoke:all

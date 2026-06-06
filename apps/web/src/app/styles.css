@@ -738,6 +738,33 @@ table.market { width: 100%; border-collapse: collapse; }
   animation: fadeIn var(--dur-med) var(--ease-out);
   box-shadow: var(--glow-red);
 }
+.error-box.load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.error-box.load-error .mini-btn {
+  flex: none;
+}
+.recent-tx-banner {
+  margin-top: 12px;
+  padding: 10px 13px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-soft);
+  color: var(--tx-2);
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.recent-tx-banner span {
+  flex: 1;
+  min-width: 180px;
+}
 .metric-box {
   background: var(--bg-card-2);
   border: 1px solid var(--border-soft);

@@ -5,19 +5,24 @@ import Link from "next/link";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { Logo } from "../../icons";
 import { explorerAddressUrl, webContracts } from "../../../lib/contracts";
+import { fetchSnapshot } from "../../../lib/snapshot";
+import { short } from "../../../lib/dashboard-data";
 
-const TICKER = [
-  { t: "Agent #1 · profile read", v: "ALLOW", k: "alw" },
+type TickerRow = { t: string; v: string; k: "alw" | "blk" };
+
+// Illustrative fallback shown only while the live snapshot is still loading (or if the indexer/RPC
+// is unreachable). Replaced by real recent on-chain decisions as soon as they arrive.
+const FALLBACK: TickerRow[] = [
+  { t: "Agent profile read", v: "ALLOW", k: "alw" },
   { t: "Unknown target", v: "BLOCK · TARGET_NOT_ALLOWED", k: "blk" },
-  { t: "Vault deposit · 0.01 MNT", v: "ALLOW", k: "alw" },
-  { t: "Overspend +1 wei", v: "BLOCK · VALUE_LIMIT_EXCEEDED", k: "blk" },
-  { t: "Unlimited approve", v: "BLOCK · UNKNOWN_SELECTOR", k: "blk" },
-  { t: "RWA rebalance", v: "BLOCK · RWA_OVEREXPOSURE", k: "blk" },
+  { t: "Overspend", v: "BLOCK · VALUE_LIMIT_EXCEEDED", k: "blk" },
+  { t: "Selector not allowed", v: "BLOCK · SELECTOR_NOT_ALLOWED", k: "blk" },
   { t: "Quote read", v: "ALLOW", k: "alw" },
 ];
 
 export function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
+  const [rows, setRows] = useState<TickerRow[]>();
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.001 });
 
@@ -28,8 +33,30 @@ export function LandingNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Real recent decisions, read live from Mantle Sepolia (indexer snapshot, RPC fallback).
+  useEffect(() => {
+    let active = true;
+    fetchSnapshot("", { force: false })
+      .then((snapshot) => {
+        if (!active) return;
+        const live = snapshot.actions.slice(0, 8).map<TickerRow>((action) => ({
+          t: `Agent #${action.agentId} · ${short(action.target)}`,
+          v: action.decision === "ALLOW" ? "ALLOW" : `BLOCK · ${action.reasonCode}`,
+          k: action.decision === "ALLOW" ? "alw" : "blk",
+        }));
+        if (live.length >= 3) setRows(live);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const live = Boolean(rows);
+  const ticker = rows ?? FALLBACK;
+
   const row = (key: string) =>
-    TICKER.map((item) => (
+    ticker.map((item) => (
       <span key={key + item.t}>
         {item.t} — <b className={item.k}>{item.v}</b>
       </span>
@@ -41,7 +68,9 @@ export function LandingNav() {
       <div className="az-ticker">
         <div className="az-container">
           <div className="az-ticker-inner">
-            <span className="az-ticker-tag"><span className="d" /> Now examining</span>
+            <span className="az-ticker-tag">
+              {live ? <span className="d" /> : null} {live ? "Recently examined · live" : "Example checks"}
+            </span>
             <div className="az-marquee">
               <div className="az-marquee-track">
                 {row("a")}

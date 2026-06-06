@@ -68,14 +68,18 @@ contract AttestorCommittee {
         return false;
     }
 
+    /// @notice Number of committee members.
     function memberCount() external view returns (uint256) {
         return memberList.length;
     }
 
+    /// @notice The full list of committee member addresses.
     function members() external view returns (address[] memory) {
         return memberList;
     }
 
+    /// @notice Add a committee member. Owner-only.
+    /// @param attestor The member address to add (non-zero, not already a member).
     function addAttestor(address attestor) external onlyOwner {
         if (attestor == address(0)) revert ZeroAddress();
         if (isMember[attestor]) revert AlreadyMember();
@@ -84,6 +88,8 @@ contract AttestorCommittee {
         emit AttestorAdded(attestor);
     }
 
+    /// @notice Remove a committee member. Owner-only; reverts if it would drop members below threshold.
+    /// @param attestor The member address to remove.
     function removeAttestor(address attestor) external onlyOwner {
         if (!isMember[attestor]) revert NotMember();
         if (memberList.length - 1 < threshold) revert BadThreshold();
@@ -101,6 +107,8 @@ contract AttestorCommittee {
         emit AttestorRemoved(attestor);
     }
 
+    /// @notice Set the m-of-n approval threshold. Owner-only; must be 1..memberCount.
+    /// @param thresholdValue The new minimum number of distinct member signatures required.
     function setThreshold(uint256 thresholdValue) external onlyOwner {
         if (thresholdValue == 0 || thresholdValue > memberList.length) revert BadThreshold();
         threshold = thresholdValue;

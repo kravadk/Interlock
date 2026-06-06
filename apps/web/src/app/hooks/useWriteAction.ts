@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import type { Hex } from "viem";
 import { explorerTxUrl } from "../../lib/contracts";
 import { actionableTxError, extractTxError } from "../../lib/tx-error";
+import { rememberTx } from "../../lib/pending-tx";
 import { useToast } from "../components/Toast";
 
 export type WriteActionState = {
@@ -39,6 +40,7 @@ export function useWriteAction<R extends Hex | { txHash: Hex }>(
       const txHash = (typeof result === "string" ? result : result.txHash) as Hex;
       const explorerUrl = explorerTxUrl(txHash);
       setState({ status: "success", txHash, explorerUrl });
+      rememberTx(txHash, options?.label ?? "Transaction");
       push({ variant: "success", title: options?.label ? `${options.label} confirmed` : "Transaction confirmed", href: explorerUrl });
       await onSuccess?.(result);
       return result;

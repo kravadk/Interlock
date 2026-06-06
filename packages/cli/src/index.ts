@@ -356,6 +356,22 @@ async function main() {
     return;
   }
 
+  if (parsed.command === "erc8004-identity") {
+    const agentId = bigintFlag(parsed.flags, "agent-id");
+    const identity = await firewall.getErc8004Identity(agentId, optionalAddress(parsed.flags, "registry"));
+    console.log(json(identity));
+    return;
+  }
+
+  if (parsed.command === "erc8004-register") {
+    const transactionHash = await firewall.registerErc8004Identity(
+      requiredString(parsed.flags, "agent-uri"),
+      optionalAddress(parsed.flags, "registry"),
+    );
+    console.log(json({ transactionHash }));
+    return;
+  }
+
   if (parsed.command === "policy-get") {
     const policyId = bigintFlag(parsed.flags, "policy-id");
     const policy = await firewall.getPolicy(policyId);
@@ -975,6 +991,8 @@ Commands:
   record      Run preflight and record the decision on-chain
   history     Read ActionChecked history
   agent-get   Read agent owner, metadata, and reputation counters
+  erc8004-identity  Read an agent's identity from the official ERC-8004 IdentityRegistry
+  erc8004-register  Register an agent into the official ERC-8004 IdentityRegistry (needs --private-key)
   policy-get  Read policy owner, limits, and active state
   policy-check Check whether a target and/or selector is allowed
   preset      Print a policy preset summary

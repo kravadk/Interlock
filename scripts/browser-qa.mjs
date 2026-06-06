@@ -204,6 +204,33 @@ try {
     if (!value) failures.push(`Judge/product surface missing: ${key}`);
   }
 
+  // Walk every remaining tab as a real user would, asserting each renders a panel without errors.
+  const remainingTabs = [
+    { tab: "Agents", signature: "Agent Safety Card" },
+    { tab: "Recorder", signature: "Flight Recorder" },
+    { tab: "Analytics", signature: "Reason Distribution" },
+    { tab: "Integrate", signature: "Integrate" },
+    { tab: "Agent Demo", signature: "Agent" },
+  ];
+  for (const { tab, signature } of remainingTabs) {
+    try {
+      await cdp.evaluate(
+        `(() => { const b = Array.from(document.querySelectorAll("button")).find((n) => n.textContent.trim() === ${JSON.stringify(tab)}); if (b) b.click(); })()`,
+      );
+      await waitFor(
+        async () =>
+          cdp.evaluate(
+            `document.querySelectorAll(".panel").length > 0 && document.body.innerText.includes(${JSON.stringify(signature)})`,
+          ),
+        `Tab did not render: ${tab}`,
+        12_000,
+      );
+      panelTitles.push(`tab:${tab}`);
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
   if (consoleErrors.length > 0) {
     failures.push(...consoleErrors);
   }

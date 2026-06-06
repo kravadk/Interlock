@@ -47,12 +47,17 @@ contract AgentRegistry {
         _;
     }
 
+    /// @notice Point reputation writes at the authorized ActionAttestation contract. Owner-only.
+    /// @param newActionAttestation The ActionAttestation address allowed to call `updateReputation`.
     function setActionAttestation(address newActionAttestation) external onlyContractOwner {
         if (newActionAttestation == address(0)) revert ZeroAddress();
         actionAttestation = newActionAttestation;
         emit ActionAttestationUpdated(newActionAttestation);
     }
 
+    /// @notice Register a new agent owned by the caller and return its id.
+    /// @param metadataURI Pointer to the agent's off-chain metadata (URL / IPFS / data URI).
+    /// @return agentId The newly assigned agent id.
     function registerAgent(string calldata metadataURI) external returns (uint256 agentId) {
         agentId = nextAgentId++;
         agents[agentId] = Agent({
@@ -66,6 +71,11 @@ contract AgentRegistry {
         emit AgentRegistered(agentId, msg.sender, metadataURI);
     }
 
+    /// @notice Increment an agent's reputation counters from a recorded decision. Callable only by
+    ///         the authorized ActionAttestation contract.
+    /// @param agentId The agent whose counters update.
+    /// @param decision 0 = ALLOW, 1 = BLOCK.
+    /// @param reasonCode The decision reason code (4 = simulation failure).
     function updateReputation(uint256 agentId, uint8 decision, uint8 reasonCode) external onlyActionAttestation {
         Agent storage agent = agents[agentId];
         if (!agent.exists) revert AgentNotFound();
@@ -90,12 +100,16 @@ contract AgentRegistry {
         );
     }
 
+    /// @notice The owner address of an agent. Reverts if the agent does not exist.
+    /// @param agentId The agent id to look up.
     function ownerOf(uint256 agentId) external view returns (address) {
         Agent storage agent = agents[agentId];
         if (!agent.exists) revert AgentNotFound();
         return agent.owner;
     }
 
+    /// @notice Full agent record (owner, metadata, reputation counters). Reverts if not found.
+    /// @param agentId The agent id to read.
     function getAgent(uint256 agentId) external view returns (Agent memory) {
         Agent storage agent = agents[agentId];
         if (!agent.exists) revert AgentNotFound();

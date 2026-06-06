@@ -4,7 +4,6 @@ import { useState } from "react";
 import { formatEther, isAddress, type Address, type Hex } from "viem";
 import {
   buildErc8004AgentManifest,
-  decodeErc20Action,
   generatePolicyPackFromAbi,
   type MantleEcosystemPolicyPack,
 } from "@interlock/firewall-sdk";
@@ -27,6 +26,7 @@ import { ActionPipelineChart, ReasonDistribution } from "./components/charts";
 import { RecordsTable } from "./components/RecordsTable";
 import { DisputePanel } from "./components/DisputePanel";
 import { AgentReputation } from "./components/AgentReputation";
+import { Erc8004Identity } from "./components/Erc8004Identity";
 import { RegisterAgentForm } from "./components/RegisterAgentForm";
 import { CreatePolicyForm } from "./components/CreatePolicyForm";
 import { OnboardingChecklist } from "./components/OnboardingChecklist";
@@ -38,6 +38,7 @@ import type { PreflightDecision } from "../lib/preflight";
 import type { ActionProposal, IndexerAction, IndexerAgent, IndexerPolicy, YieldDataPoint } from "../lib/indexer";
 import { explorerAddressUrl, mantleRpcUrl, webContracts } from "../lib/contracts";
 import { mantleLinks, short, type RecordRow, type ReasonRow, type SortState } from "../lib/dashboard-data";
+import { buildRwaEvidenceRows, formatPercent, formatUsd, tokenEvidenceFromAction } from "../lib/action-evidence";
 import { aiEnabled, summarizeBlocks, type AiBlockSummary, type AiExplanation } from "../lib/ai";
 import { checksToPipeline, idlePipeline, preflightDisabledReason } from "./lib/preflight-pipeline";
 
@@ -148,7 +149,6 @@ export function AgentsView({
   account,
   wrongChain,
   onRegistered,
-  erc8004Registry,
 }: {
   agents: IndexerAgent[];
   selectedAgent?: IndexerAgent;
@@ -157,7 +157,6 @@ export function AgentsView({
   account?: Address;
   wrongChain?: boolean;
   onRegistered: (agentId: string) => void;
-  erc8004Registry?: string;
 }) {
   const manifest = buildErc8004AgentManifest({
     interlockAgentId: agentId || "0",
@@ -200,20 +199,11 @@ export function AgentsView({
         </div>
       </Panel>
 
-      <Panel title="ERC-8004 Bridge" subtitle="Optional identity manifest for Mantle agent identity/reputation registries.">
+      <Panel title="ERC-8004 Identity" subtitle="Real identity + reputation from the official ERC-8004 registries on Mantle Sepolia. Interlock acts as a Validator (its firewall attestations are the trust signal).">
         <div style={{ padding: "0 16px 16px", display: "grid", gap: 12 }}>
-          {erc8004Registry && isAddress(erc8004Registry) ? (
-            <a className="btn" href={explorerAddressUrl(erc8004Registry)} target="_blank" rel="noreferrer">
-              <Icon.eye s={16} />
-              <span>Identity registry | {short(erc8004Registry)}</span>
-            </a>
-          ) : (
-            <div className="inlineWarning">
-              ERC-8004 registry is not configured. Set NEXT_PUBLIC_ERC8004_IDENTITY_REGISTRY to show a real registry link; Interlock will not ship an unverified address.
-            </div>
-          )}
+          <Erc8004Identity agentId={agentId} account={account} wrongChain={wrongChain} />
           <div className="snippet-head">
-            <span className="snippet-label">Agent manifest</span>
+            <span className="snippet-label">Agent registration manifest</span>
             <CopyButton text={JSON.stringify(manifest, null, 2)} />
           </div>
           <pre className="snippet">{JSON.stringify(manifest, null, 2)}</pre>
@@ -482,7 +472,7 @@ export function PreflightView(props: {
 }) {
   const checks = props.decision ? checksToPipeline(props.decision) : idlePipeline();
   const disabledReason = preflightDisabledReason(props);
-  const tokenEvidence = tokenEvidenceFromCalldata(props.calldata);
+  const tokenEvidence = tokenEvidenceFromAction(props.target, props.calldata);
   const rwaEvidence = buildRwaEvidenceRows(props.ecosystemYields);
   return (
     <>
@@ -649,16 +639,17 @@ export function PreflightView(props: {
         </div>
       </Panel>
 
-      <Panel title="Token &amp; RWA Evidence" subtitle="Calldata-level token warnings and live yield/RWA advisory evidence.">
+      <Panel title="Token &amp; RWA Evidence" subtitle="Advisory (off-chain) token-rule and yield/RWA checks. These do not change the on-chain ALLOW/BLOCK or the recorded attestation.">
         <div className="card-grid">
           <div className="mini-card">
             <div className="mc-head">
-              <strong>ERC20 calldata guard</strong>
+              <strong>ERC20 token rule</strong>
               <span className={`mc-tag ${tokenEvidence.status}`}>{tokenEvidence.status}</span>
             </div>
             <p>{tokenEvidence.message}</p>
-            {tokenEvidence.details.length ? (
+            {tokenEvidence.reasonCode || tokenEvidence.details.length ? (
               <div className="chip-row">
+                {tokenEvidence.reasonCode ? <span className="chip">{tokenEvidence.reasonCode}</span> : null}
                 {tokenEvidence.details.map((detail) => (
                   <span key={detail} className="chip">{detail}</span>
                 ))}
@@ -671,9 +662,11 @@ export function PreflightView(props: {
               <span className={`mc-tag ${rwaEvidence.status}`}>{rwaEvidence.status}</span>
             </div>
             <p>{rwaEvidence.message}</p>
-            {rwaEvidence.rows.length ? (
+            {rwaEvidence.reasonCode || rwaEvidence.evidenceHash || rwaEvidence.rows.length ? (
               <div className="chip-row">
-                {rwaEvidence.rows.slice(0, 5).map((row) => (
+                {rwaEvidence.reasonCode ? <span className="chip">{rwaEvidence.reasonCode}</span> : null}
+                {rwaEvidence.evidenceHash ? <span className="chip">evidence {short(rwaEvidence.evidenceHash)}</span> : null}
+                {rwaEvidence.rows.slice(0, 4).map((row) => (
                   <span key={row} className="chip">{row}</span>
                 ))}
               </div>
@@ -1094,12 +1087,12 @@ NEXT_PUBLIC_ACTION_ATTESTATION=${webContracts.actionAttestation}`;
         {ecosystemYields.length ? (
           <div className="card-grid">
             {ecosystemYields.slice(0, 6).map((point) => (
-              <div key={point.id} className="mini-card">
+              <div key={point.poolId} className="mini-card">
                 <div className="mc-head">
                   <strong>{point.project}</strong>
-                  <span className="mc-tag">{point.chain}</span>
+                  <span className="mc-tag">{point.chain ?? "Mantle"}</span>
                 </div>
-                <p>{point.symbol}</p>
+                <p>{point.symbol ?? point.poolId}</p>
                 <div className="chip-row">
                   <span className="chip">TVL {formatUsd(point.tvlUsd)}</span>
                   <span className="chip">APY {formatPercent(point.apy)}</span>
@@ -1159,65 +1152,3 @@ function ProposalTimeline({ proposals, agentId, policyId }: { proposals: ActionP
   );
 }
 
-function formatUsd(value?: number) {
-  if (value === undefined || !Number.isFinite(value)) return "n/a";
-  return `$${Math.round(value).toLocaleString()}`;
-}
-
-function formatPercent(value?: number) {
-  if (value === undefined || !Number.isFinite(value)) return "n/a";
-  return `${value.toFixed(2)}%`;
-}
-
-function tokenEvidenceFromCalldata(calldata: string): { status: "ready" | "pass" | "fail"; message: string; details: string[] } {
-  if (!/^0x([0-9a-fA-F]{2})*$/.test(calldata)) {
-    return { status: "fail", message: "Calldata is not valid even-byte hex, so ERC20 evidence cannot be decoded.", details: [] };
-  }
-  const decoded = decodeErc20Action(calldata as Hex);
-  if (decoded.kind === "unknown") {
-    return {
-      status: "ready",
-      message: "Current calldata is not a recognized ERC20 transfer, transferFrom, or approve call.",
-      details: [`selector ${decoded.selector}`],
-    };
-  }
-  if (decoded.kind === "approve") {
-    return {
-      status: decoded.unlimited ? "fail" : "pass",
-      message: decoded.unlimited
-        ? "Unlimited approve detected. Interlock token rules block this unless the policy explicitly allows it."
-        : "ERC20 approve decoded. Review spender and amount before adding a token rule.",
-      details: [`spender ${short(decoded.spender)}`, `amount ${decoded.amount.toString()}`, decoded.unlimited ? "unlimited" : "bounded"],
-    };
-  }
-  if (decoded.kind === "transferFrom") {
-    return {
-      status: "pass",
-      message: "ERC20 transferFrom decoded. Token rules can enforce owner, recipient and amount caps before execution.",
-      details: [`owner ${short(decoded.owner)}`, `recipient ${short(decoded.recipient)}`, `amount ${decoded.amount.toString()}`],
-    };
-  }
-  return {
-    status: "pass",
-    message: "ERC20 transfer decoded. Token rules can enforce recipient allowlists and max amount.",
-    details: [`recipient ${short(decoded.recipient)}`, `amount ${decoded.amount.toString()}`],
-  };
-}
-
-function buildRwaEvidenceRows(points: YieldDataPoint[]): { status: "ready" | "pass" | "fail"; message: string; rows: string[] } {
-  if (!points.length) {
-    return {
-      status: "ready",
-      message: "No live yield/RWA records are loaded. Sync the Recorder Service to use real advisory evidence.",
-      rows: [],
-    };
-  }
-  const risky = points.filter((point) => (point.apy ?? 0) > 50 || (point.tvlUsd ?? Number.POSITIVE_INFINITY) < 100_000);
-  return {
-    status: risky.length ? "fail" : "pass",
-    message: risky.length
-      ? "Live yield signals contain high-APY or low-TVL pools; use stricter policy limits before allowing RWA/DeFi actions."
-      : "Loaded yield signals do not exceed the default advisory APY/TVL thresholds.",
-    rows: points.slice(0, 8).map((point) => `${point.project}: TVL ${formatUsd(point.tvlUsd)}, APY ${formatPercent(point.apy)}`),
-  };
-}

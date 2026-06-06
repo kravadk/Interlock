@@ -41,11 +41,13 @@ export function OnboardingChecklist({
   onConnect: () => void;
 }) {
   const [balance, setBalance] = useState<bigint | undefined>();
+  const [balanceError, setBalanceError] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (!wallet?.address) {
       setBalance(undefined);
+      setBalanceError(false);
       return;
     }
     let active = true;
@@ -53,13 +55,19 @@ export function OnboardingChecklist({
     const client = createPublicClient({ chain: mantleSepolia, transport: http(mantleRpcUrl()) });
     let interval: ReturnType<typeof setInterval> | undefined;
     const load = async () => {
-      const value = await client.getBalance({ address }).catch(() => undefined);
-      if (!active || value === undefined) return;
-      setBalance(value);
-      // Faucet funds often arrive after the page is already open; stop re-checking once funded.
-      if (value > 0n && interval) {
-        clearInterval(interval);
-        interval = undefined;
+      try {
+        const value = await client.getBalance({ address });
+        if (!active) return;
+        setBalance(value);
+        setBalanceError(false);
+        // Faucet funds often arrive after the page is already open; stop re-checking once funded.
+        if (value > 0n && interval) {
+          clearInterval(interval);
+          interval = undefined;
+        }
+      } catch {
+        // Surface the RPC failure instead of swallowing it; the interval keeps retrying.
+        if (active) setBalanceError(true);
       }
     };
     void load();
@@ -76,6 +84,13 @@ export function OnboardingChecklist({
   }, [wallet?.address]);
 
   const hasGas = balance !== undefined && balance > 0n;
+  const fundHint = balanceError
+    ? "Balance check failed — RPC unavailable, retrying…"
+    : hasGas
+      ? `Balance: ${formatEther(balance!).slice(0, 8)} MNT`
+      : wallet && balance === undefined
+        ? "Checking balance…"
+        : "You need gas to send transactions.";
 
   const steps: Step[] = [
     {
@@ -88,7 +103,7 @@ export function OnboardingChecklist({
     {
       key: "fund",
       label: "Get test MNT",
-      hint: hasGas ? `Balance: ${formatEther(balance!).slice(0, 8)} MNT` : "You need gas to send transactions.",
+      hint: fundHint,
       done: hasGas,
       href: FAUCET_URL,
     },

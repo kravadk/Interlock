@@ -34,6 +34,7 @@ release-artifacts/
 !/README.md
 !/CHANGELOG.md
 !/SECURITY.md
+!/FUNCTIONS.md
 !/docs/**/*.md
 !/packages/**/README.md
 !/apps/**/README.md
@@ -41,6 +42,11 @@ release-artifacts/
 !/policies/**/*.md
 Hackathon_Idea_Research.md
 PLAN.md
+
+# Competitor / reference-repo analysis: kept locally for our own use, never published to GitHub.
+/docs/competitive-gap-analysis.md
+/docs/competitive-analysis.md
+/docs/competitive-landscape.md
 
 # Test files are intentionally PUBLIC on GitHub (they demonstrate depth + coverage to reviewers).
 # Only generated test OUTPUT stays hidden (test-results/ above).

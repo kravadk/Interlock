@@ -37,6 +37,8 @@ import { buildCreatePolicyInput } from "./presets.js";
 import { withRpcRetry } from "./rpc.js";
 import { actionCheckedFromReceipt, agentRegistrationFromReceipt, policyCreationFromReceipt } from "./setup-results.js";
 import { checkActionBundle, recordBundleDecisions } from "./action-bundle.js";
+import { getErc8004Agent, getErc8004ReputationSummary, registerErc8004Agent, type Erc8004Agent } from "./erc8004.js";
+import { deployedAddresses } from "@interlock/shared";
 import {
   assertNonNegativeWei,
   assertPositiveId,
@@ -248,6 +250,42 @@ export class InterlockFirewall {
       args: [agentId],
     })) as [bigint, number];
     return { scoreBps: Number(scoreBps), tier };
+  }
+
+  /**
+   * Read an agent's identity from the OFFICIAL ERC-8004 IdentityRegistry (defaults to the
+   * verified Mantle Sepolia registry). Reuses {@link getErc8004Agent}.
+   */
+  async getErc8004Identity(agentId: bigint, identityRegistry?: Address): Promise<Erc8004Agent> {
+    return getErc8004Agent({
+      publicClient: this.publicClient,
+      identityRegistry: identityRegistry ?? requireErc8004Registry(deployedAddresses.mantleSepolia.erc8004IdentityRegistry, "identity"),
+      agentId,
+    });
+  }
+
+  /** Read an agent's reputation summary from the OFFICIAL ERC-8004 ReputationRegistry. */
+  async getErc8004Reputation(agentId: bigint, clientAddresses: Address[], reputationRegistry?: Address) {
+    return getErc8004ReputationSummary({
+      publicClient: this.publicClient,
+      reputationRegistry: reputationRegistry ?? requireErc8004Registry(deployedAddresses.mantleSepolia.erc8004ReputationRegistry, "reputation"),
+      agentId,
+      clientAddresses,
+    });
+  }
+
+  /**
+   * Register this Interlock agent into the OFFICIAL ERC-8004 IdentityRegistry (on-chain write,
+   * needs a wallet client). `agentURI` should point at the agent's registration manifest.
+   */
+  async registerErc8004Identity(agentURI: string, identityRegistry?: Address): Promise<Hex> {
+    const walletClient = this.requireWalletClient("registerErc8004Identity");
+    return registerErc8004Agent({
+      walletClient,
+      account: walletClient.account,
+      identityRegistry: identityRegistry ?? requireErc8004Registry(deployedAddresses.mantleSepolia.erc8004IdentityRegistry, "identity"),
+      agentURI,
+    });
   }
 
   async createPolicy(input: CreatePolicyInput): Promise<Hex> {
@@ -1121,4 +1159,13 @@ function isBadAttestorSignatureError(error: unknown): boolean {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function requireErc8004Registry(address: Address | undefined, kind: "identity" | "reputation"): Address {
+  if (!address) {
+    throw new Error(
+      `No ERC-8004 ${kind} registry configured. Pass it explicitly or set the ERC8004_${kind === "identity" ? "IDENTITY" : "REPUTATION"}_REGISTRY env.`,
+    );
+  }
+  return address;
 }

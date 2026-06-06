@@ -3,12 +3,12 @@ import { expect, test } from "@playwright/test";
 test("landing page renders and links into the control plane", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByText("A firewall for autonomous").first()).toBeVisible();
-  await expect(page.getByRole("link", { name: /Launch the control plane/i })).toBeVisible();
+  await expect(page.getByText("Pre-flight firewall").first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Enter the control plane/i }).first()).toBeVisible();
 
-  await page.getByRole("link", { name: /Launch the control plane/i }).click();
+  await page.getByRole("link", { name: /Enter the control plane/i }).first().click();
   await expect(page).toHaveURL(/\/app$/);
-  await expect(page.getByText("Interlock Control Plane").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Connect Wallet/i })).toBeVisible();
 });
 
 test("control plane opens without wallet and exposes preflight", async ({ page }) => {

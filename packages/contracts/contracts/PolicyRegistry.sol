@@ -55,6 +55,13 @@ contract PolicyRegistry {
         _;
     }
 
+    /// @notice Create a policy for an agent the caller owns, seeding target + selector allowlists.
+    /// @param agentId The agent this policy governs (caller must own it).
+    /// @param maxNativeValue Max native value an allowed action may carry.
+    /// @param maxSlippageBps Max slippage (basis points, <= MAX_SLIPPAGE_BPS) advisory limit.
+    /// @param targets Initial allowlisted call targets.
+    /// @param selectors Initial allowlisted 4-byte selectors.
+    /// @return policyId The newly assigned policy id.
     function createPolicy(
         uint256 agentId,
         uint256 maxNativeValue,
@@ -85,6 +92,11 @@ contract PolicyRegistry {
         emit PolicyCreated(policyId, agentId, msg.sender, maxNativeValue, maxSlippageBps);
     }
 
+    /// @notice Update a policy's limits and active state. Policy owner only.
+    /// @param policyId The policy to update.
+    /// @param maxNativeValue New max native value for allowed actions.
+    /// @param maxSlippageBps New slippage limit (basis points, <= MAX_SLIPPAGE_BPS).
+    /// @param active Whether the policy is active (inactive policies block all actions).
     function updatePolicy(
         uint256 policyId,
         uint256 maxNativeValue,
@@ -100,42 +112,65 @@ contract PolicyRegistry {
         emit PolicyUpdated(policyId, maxNativeValue, maxSlippageBps, active);
     }
 
+    /// @notice Add or remove a call target from a policy's allowlist. Policy owner only.
+    /// @param policyId The policy to modify.
+    /// @param target The call target address.
+    /// @param allowed True to allow, false to remove.
     function setTargetAllowed(uint256 policyId, address target, bool allowed) external onlyPolicyOwner(policyId) {
         _setTargetAllowed(policyId, target, allowed);
     }
 
+    /// @notice Add or remove a 4-byte selector from a policy's allowlist. Policy owner only.
+    /// @param policyId The policy to modify.
+    /// @param selector The function selector.
+    /// @param allowed True to allow, false to remove.
     function setSelectorAllowed(uint256 policyId, bytes4 selector, bool allowed) external onlyPolicyOwner(policyId) {
         _setSelectorAllowed(policyId, selector, allowed);
     }
 
+    /// @notice Full policy record (owner, agent, limits, active). Reverts if not found.
+    /// @param policyId The policy id to read.
     function getPolicy(uint256 policyId) external view returns (Policy memory) {
         if (policies[policyId].owner == address(0)) revert PolicyNotFound();
         return policies[policyId];
     }
 
+    /// @notice The owner address of a policy. Reverts if not found.
+    /// @param policyId The policy id to look up.
     function ownerOf(uint256 policyId) external view returns (address) {
         if (policies[policyId].owner == address(0)) revert PolicyNotFound();
         return policies[policyId].owner;
     }
 
+    /// @notice Whether a target is on the policy's allowlist.
+    /// @param policyId The policy id.
+    /// @param target The call target to check.
     function isTargetAllowed(uint256 policyId, address target) external view returns (bool) {
         return allowedTargets[policyId][target];
     }
 
+    /// @notice Whether a selector is on the policy's allowlist.
+    /// @param policyId The policy id.
+    /// @param selector The 4-byte selector to check.
     function isSelectorAllowed(uint256 policyId, bytes4 selector) external view returns (bool) {
         return allowedSelectors[policyId][selector];
     }
 
+    /// @notice Enumerate a policy's allowlisted targets. Reverts if not found.
+    /// @param policyId The policy id.
     function getAllowedTargets(uint256 policyId) external view returns (address[] memory) {
         if (policies[policyId].owner == address(0)) revert PolicyNotFound();
         return policyTargets[policyId];
     }
 
+    /// @notice Enumerate a policy's allowlisted selectors. Reverts if not found.
+    /// @param policyId The policy id.
     function getAllowedSelectors(uint256 policyId) external view returns (bytes4[] memory) {
         if (policies[policyId].owner == address(0)) revert PolicyNotFound();
         return policySelectors[policyId];
     }
 
+    /// @notice Capability flag: this PolicyRegistry supports target/selector enumeration.
     function supportsPolicyEnumeration() external pure returns (bool) {
         return true;
     }

@@ -70,7 +70,7 @@ export async function fetchRpcHistorySnapshot(agentId?: string): Promise<RpcHist
 
   return {
     health: {
-      ok: true,
+      ok: !lastSyncError,
       nextFromBlock: actionAttestationFromBlock().toString(),
       lastSyncedCount: actions.length,
       autoSync: false,

@@ -155,12 +155,27 @@ contract ActionAttestationV3 {
         _;
     }
 
+    /// @notice Set the authorized attestor whose EIP-712 signature `recordAction` requires. Owner-only.
+    /// @param newAttestor The new attestor address (non-zero).
     function setAttestor(address newAttestor) external onlyContractOwner {
         if (newAttestor == address(0)) revert ZeroAddress();
         attestor = newAttestor;
         emit AttestorUpdated(newAttestor);
     }
 
+    /// @notice Record an attestor-signed ALLOW/BLOCK decision, opening a dispute window and updating
+    ///         AgentRegistry reputation. Recovers the EIP-712 signer and requires it to equal `attestor`.
+    /// @param agentId Agent the action belongs to.
+    /// @param policyId Policy evaluated for the action.
+    /// @param target Call target of the proposed action.
+    /// @param value Native value of the proposed action.
+    /// @param calldataHash keccak256 of the proposed calldata.
+    /// @param selector 4-byte function selector of the proposed calldata.
+    /// @param simulationHash keccak256 commitment to the off-chain simulation result.
+    /// @param evidenceHash keccak256 commitment to the full off-chain evidence object.
+    /// @param decision The recorded ALLOW/BLOCK decision.
+    /// @param reasonCode The machine-readable reason for the decision.
+    /// @param deadline Unix time after which the signature is rejected (replay/staleness guard).
     function recordAction(
         uint256 agentId,
         uint256 policyId,
@@ -275,6 +290,9 @@ contract ActionAttestationV3 {
         emit ActionFinalized(actionCheckId);
     }
 
+    /// @notice Read a recorded attestation by id (decision, status, dispute window, evidence hash).
+    /// @param actionCheckId The attestation id returned by `recordAction`.
+    /// @return The stored ActionCheck record.
     function getActionCheck(uint256 actionCheckId) external view returns (ActionCheck memory) {
         return actionChecks[actionCheckId];
     }

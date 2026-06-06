@@ -8,6 +8,9 @@ export type WebContracts = {
   policyGuardedExecutor: Address;
   disputeEscrow: Address;
   reputationOracle: Address;
+  // Official ERC-8004 registries (verified-deployed on Mantle Sepolia; default to the shared address).
+  erc8004IdentityRegistry: Address;
+  erc8004ReputationRegistry: Address;
 };
 
 export const webContracts: WebContracts = {
@@ -26,6 +29,14 @@ export const webContracts: WebContracts = {
     "NEXT_PUBLIC_REPUTATION_ORACLE",
     deployedAddresses.mantleSepolia.reputationOracle ?? zeroAddress,
   ),
+  erc8004IdentityRegistry: envAddress(
+    "NEXT_PUBLIC_ERC8004_IDENTITY_REGISTRY",
+    deployedAddresses.mantleSepolia.erc8004IdentityRegistry ?? zeroAddress,
+  ),
+  erc8004ReputationRegistry: envAddress(
+    "NEXT_PUBLIC_ERC8004_REPUTATION_REGISTRY",
+    deployedAddresses.mantleSepolia.erc8004ReputationRegistry ?? zeroAddress,
+  ),
 };
 
 export function hasGuardConfigured() {
@@ -38,6 +49,10 @@ export function hasDisputeEscrowConfigured() {
 
 export function hasReputationOracleConfigured() {
   return webContracts.reputationOracle !== zeroAddress;
+}
+
+export function hasErc8004Configured() {
+  return webContracts.erc8004IdentityRegistry !== zeroAddress;
 }
 
 export function hasWriteContractsConfigured() {

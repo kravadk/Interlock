@@ -7,6 +7,7 @@
   <img alt="Network" src="https://img.shields.io/badge/Mantle-Sepolia%205003-3fd5ff?style=flat-square">
   <img alt="Status" src="https://img.shields.io/badge/status-Dev%20Alpha-f5a623?style=flat-square">
   <img alt="Hackathon" src="https://img.shields.io/badge/Turing%20Test%202026-AI%20DevTools-8b5cf6?style=flat-square">
+  <a href="FUNCTIONS.md"><img alt="Function Reference" src="https://img.shields.io/badge/reference-FUNCTIONS.md-6366f1?style=flat-square"></a>
 </p>
 
 # Interlock - a firewall for autonomous AI agents on Mantle
@@ -37,8 +38,8 @@ See [SECURITY.md](SECURITY.md).
 - [Dashboard](#dashboard) | [AI layer](#ai-layer-advisory) | [Agent demo](#agent-demo-end-to-end)
 - [SDK](#sdk) | [MCP server](#mcp-server) | [REST preflight API](#rest-preflight-api) | [CLI](#cli)
 - [Recorder API, observability & webhooks](#recorder-api-observability--webhooks) | [Contracts](#contracts) | [Environment](#environment)
-- [Benchmark Arena](#benchmark-arena) | [Product additions](#product-additions) | [Latest completion update](#latest-completion-update) | [Policy packs, presets & versioning](#policy-packs-presets--versioning) | [Examples](#examples)
-- [Testing & readiness](#testing--readiness) | [Build, ship & CI](#build-ship--ci) | [Developer error prevention](#developer-error-prevention) | [Limitations](#limitations) | [Documentation](#documentation)
+- [Benchmark Arena](#benchmark-arena) | [Capabilities](#capabilities-beyond-core-preflight) | [Reliability & edge cases](#reliability--edge-cases) | [Production hardening](#production-hardening)
+- [Policy packs & versioning](#policy-packs-presets--versioning) | [Examples](#examples) | [Testing & readiness](#testing--readiness) | [Build, ship & CI](#build-ship--ci) | [Limitations](#limitations) | [Documentation](#documentation)
 
 ---
 
@@ -343,11 +344,8 @@ See [`packages/sdk/README.md`](packages/sdk/README.md).
 pnpm mcp
 ```
 
-Tools: `interlock_get_status`, `interlock_preflight`, `interlock_gateway_action`, `interlock_record_decision`,
-`interlock_run_benchmark`, `interlock_get_safety_card`, `interlock_get_policy`,
-`interlock_get_agent_history`, `interlock_explain_decision`, `interlock_create_policy_draft`,
-`interlock_validate_policy_pack`, `interlock_get_erc8004_identity`, `interlock_build_erc8004_manifest`.
-Config:
+Exposes preflight, gateway, record, benchmark, safety-card, policy, history, explanation, and ERC-8004
+tools (full list in [FUNCTIONS.md](FUNCTIONS.md#mcp-tools)). Config:
 
 ```json
 {
@@ -368,9 +366,9 @@ Config:
 ```
 
 Add `PRIVATE_KEY` only when the agent should record decisions; preflight + history reads work without
-it. Optional ERC-8004 tools read a registry only when the caller provides a real registry address or
-sets `ERC8004_IDENTITY_REGISTRY`; Interlock does not hardcode unverified ERC-8004 deployments. See
-[docs/mcp.md](docs/mcp.md).
+it. The ERC-8004 tools default to the **verified official** Mantle Sepolia registries (override with
+`ERC8004_IDENTITY_REGISTRY` / `ERC8004_REPUTATION_REGISTRY`); `interlock_register_erc8004_identity`
+registers an agent into the official IdentityRegistry (needs `PRIVATE_KEY`). See [docs/mcp.md](docs/mcp.md).
 
 ---
 
@@ -391,10 +389,9 @@ curl -X POST http://127.0.0.1:8790/preflight/bundle -H "content-type: applicatio
   -d '{"intent":"Review a multi-step agent route","routeProvider":"manual","actions":[{"to":"0x...","value":"0","data":"0x","intent":"Step 1"}]}'
 ```
 
-Routes: `GET /health`, `POST /preflight`, `POST /preflight/bundle`, `POST /record`, `POST /gateway/action`,
-`GET /agents/:id/actions`, `GET /policies/:id`. Bundle preflight accepts a non-empty `actions` array
-of the same proposed transaction shape and returns a JSON-safe `bundle` report; it does not execute
-cross-chain routes or synthesize route results. Schemas: [rest-preflight-request](schemas/rest-preflight-request.schema.json),
+Full route list in [FUNCTIONS.md](FUNCTIONS.md#rest--http-routes). Bundle preflight accepts a non-empty
+`actions` array of the same proposed transaction shape and returns a JSON-safe `bundle` report; it does
+not execute cross-chain routes or synthesize route results. Schemas: [rest-preflight-request](schemas/rest-preflight-request.schema.json),
 [rest-record-request](schemas/rest-record-request.schema.json),
 [rest-preflight-response](schemas/rest-preflight-response.schema.json). Rules: `to` is an EVM address;
 `value` is a non-negative wei string; `data` is full calldata (`0x` for empty; `0x0`/odd-length
@@ -432,16 +429,11 @@ preflight -> optional record). See [docs/cli.md](docs/cli.md).
 pnpm indexer            # http://localhost:8787   (or pnpm indexer:live for the live deployment)
 ```
 
-**Read/API surface:** `/snapshot` (one request for the whole dashboard), `/agents`, `/agents/:id`,
-`/agents/:id/actions`, `/policies`, `/policies/:id`, `/actions`, `/actions/:id`,
-`/actions?agentId=&policyId=&decision=`, `/stats/agents/:id`, `/benchmark/:agentId`, `/analytics`,
-`/analytics/agents/:id`, `/analytics/policies/:id`, `POST /sync`, proposal lifecycle routes
-(`/proposals`, `/proposals/:id`, `/proposals/:id/preflight`, `/proposals/:id/mark-executed`,
-`/proposals/:id/record`), and live ecosystem signal routes (`/ecosystem/yields`,
-`/ecosystem/yields/sync`).
-
-Proposal lifecycle is guarded by a state machine. Invalid transitions such as `blocked -> executed`
-or `rejected -> recorded` return `409` instead of silently mutating history.
+**Read/API surface:** `/snapshot` (one request for the whole dashboard) plus agents, policies, actions
+(+ filters), stats, benchmark, analytics, proposal-lifecycle, and live yield routes - full list in
+[FUNCTIONS.md](FUNCTIONS.md#rest--http-routes). Proposal lifecycle is guarded by a state machine:
+invalid transitions such as `blocked -> executed` or `rejected -> recorded` return `409` instead of
+silently mutating history.
 
 **Observability:** `/health` (sync state), `/status` + `/network` (recorder/contracts/sync),
 **`/metrics`** (Prometheus: `interlock_up`, `interlock_last_synced_block`,
@@ -532,55 +524,38 @@ Benchmark tab, via `pnpm agent:benchmark`, and via the MCP `interlock_run_benchm
 Dev Alpha evidence score with track/category coverage and remediation, not a production trust score. See
 [docs/benchmark-arena.md](docs/benchmark-arena.md).
 
-## Product additions
+## Capabilities beyond core preflight
 
-Recent Mantle/hackathon reference analysis pushed Interlock beyond a single preflight form while keeping
-the same core loop.
+Same core loop, extended for real Mantle agent workflows:
 
-- **Action Proposal Lifecycle** - Recorder Service persists agent proposals and tracks `proposed ->
-  preflighted -> executed/blocked -> recorded`. Dashboard shows this as a real timeline; RPC fallback
-  shows an empty state instead of fake rows. The API rejects invalid lifecycle transitions.
-- **Action Bundle Review** - `checkActionBundle` evaluates multi-step Mantle agent routes one action at
-  a time and allows the bundle only when every required action passes. Dashboard and REST API both expose
-  bundle review.
-- **Token Transfer Guard** - ERC-20 `transfer`, `transferFrom`, and `approve` calldata can be decoded and
-  checked for recipient, spender, amount caps, and unlimited-approve risk. Dashboard surfaces token
-  calldata evidence in Action Review.
-- **ERC-8004 bridge helpers** - SDK/MCP can build an ERC-8004-style manifest and read a configured
-  identity registry. Agent Safety Card shows the manifest and a real registry link only when configured.
-  No unverified registry address is hardcoded.
-- **Mantle Yield/RWA Signals** - Recorder can sync read-only yield data and expose it to the dashboard as
-  advisory evidence for DeFi/RWA policy packs and Action Review.
-- **RWA Risk Evidence** - SDK builds a hashable report from portfolio context, guard config, yield data,
-  TVL/APY/freshness thresholds, and maps it to advisory reason codes.
-- **ABI -> Policy Pack Builder** - CLI/SDK generate a reviewable policy-pack template from a real
-  contract address and ABI. Dashboard Policy tab has the same builder for copyable templates.
-- **Agent Goal Runner + Starter Generator** - `apps/agent-demo` supports a goal-driven proposal/bundle
-  flow and can persist proposal lifecycle through Recorder. CLI can generate a minimal agent starter
-  without copying private keys, and the starter generator has a smoke test that typechecks generated code.
+- **Action bundles** - `checkActionBundle` reviews a multi-step route; ALLOW only if every action passes (SDK, REST `/preflight/bundle`, dashboard).
+- **Proposal lifecycle** - Recorder persists `proposed -> preflighted -> executed/blocked -> recorded` behind a state machine (invalid transitions -> `409`), shown as a real timeline (no fake rows).
+- **Token transfer guard** - decodes ERC-20 `transfer`/`transferFrom`/`approve` and flags recipient/spender/amount/unlimited-approve risk (`evaluateTokenRules`) as **advisory, off-chain** evidence.
+- **RWA / yield evidence** - `buildRwaRiskEvidence` over live DefiLlama yield signals -> advisory reason codes + an evidence hash (can feed `ActionAttestationV3.evidenceHash`).
+- **ERC-8004 interop** - reads identity + reputation from the **verified official** Mantle Sepolia registries (Identity `0x8004A371…`, Reputation `0x8004B1Bc…`) and can register an agent / publish feedback (SDK `registerErc8004Agent`/`giveErc8004Feedback`, CLI `erc8004-register`, MCP `interlock_register_erc8004_identity`, dashboard CTA). Interlock acts as an ERC-8004 **Validator**; ValidationRegistry writes are deferred until that standard stabilizes. Override via `ERC8004_IDENTITY_REGISTRY` / `ERC8004_REPUTATION_REGISTRY`.
+- **ABI -> policy pack** - `generatePolicyPackFromAbi` builds a reviewable policy template from a real contract ABI (SDK, CLI `policy-pack-from-abi`, dashboard "Build From ABI").
+- **Starter generator** - CLI `init-agent-app` scaffolds a typechecked agent starter (no secrets copied).
 
-See [docs/competitive-gap-analysis.md](docs/competitive-gap-analysis.md).
+## Reliability & edge cases
 
-## Latest completion update
+Every failure path has an explicit UI state (loader / retry / toast / empty / error / disabled) - no silent failures:
 
-The latest implementation pass completed the remaining UI/product-polish items from the Mantle
-reference-repo gap plan:
+- **Wallet** - live `accountsChanged` / `chainChanged` / disconnect handling; wrong-network badge + Switch; full read-only mode with no wallet.
+- **Transactions** - user-rejection, hung (timeout -> pending + explorer link), and on-chain revert with the **decoded** reason (Interlock custom errors decoded by name); a recent-tx banner recovers the link after a mid-flow reload.
+- **Data** - RPC/indexer failure surfaces a retryable warning (not an empty dashboard); balance-load errors show a retrying state; honest empty states with CTAs.
 
-| Area | Completed behavior |
-| --- | --- |
-| Agent Safety Card | Added optional ERC-8004 bridge block with manifest JSON and real-registry-only linking |
-| Policy Editor | Added `Build From ABI` UI for real address + developer-supplied ABI -> reviewable policy pack JSON |
-| Action Review | Added interactive Bundle Review, ERC-20 calldata evidence, and RWA/yield advisory evidence |
-| Benchmark Arena | Added multi-step bundle scenario alongside single-action safety scenarios |
-| Recorder proposals | Added stricter proposal state transitions; invalid lifecycle mutations return `409` |
-| Agent Goal Runner | Can create/persist proposal lifecycle through `RECORDER_URL` / `INDEXER_URL` |
-| REST API | Added `POST /preflight/bundle` for backend agent runtimes |
-| Starter Generator | Added smoke coverage that generates a starter and typechecks the generated files |
-| Docs | Updated README, dashboard behavior contract, and competitive gap analysis |
+Other handled cases: invalid address/calldata, odd-length hex, negative value, out-of-range slippage,
+selector-only calldata, empty/wrong ids, missing contract address, policy/action mismatch, insufficient
+funds, slow sync from block `0`. SDK + REST errors return a stable `code` / `message` / `action`.
+Covered by Playwright e2e with a mock wallet + mock RPC. See [docs/common-mistakes.md](docs/common-mistakes.md).
 
-Intentional non-addition: official ERC-8004 registry addresses are **not** in shared config because no
-verified deployment address was available in this workspace. Use `ERC8004_IDENTITY_REGISTRY` /
-`NEXT_PUBLIC_ERC8004_IDENTITY_REGISTRY` with a real registry address.
+## Production hardening
+
+- **Headers / CSP** - CSP (report-only) + `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS (prod); `connect-src` allowlists RPC / indexer / Mantlescan / Anthropic.
+- **Rate limiting** - env-tunable token bucket on every server route (`RATE_LIMIT_*_RPM`), degrade-safe.
+- **Error tracking** - env-gated (`SENTRY_DSN`); no-op + structured log when unset, never throws.
+- **Observability** - structured logger, indexer `/metrics` (Prometheus) + `/health` + public `/status`, web `/api/health`.
+- **Audit-readiness (on-chain)** - Slither (CI, degrade-safe) + Solhint, vitest invariant tests, full NatSpec, [mainnet runbook](docs/mainnet-runbook.md) + verify scripts, [self-audit checklist](docs/audit-readiness.md). No mainnet deploy/audit performed.
 
 ## Policy packs, presets & versioning
 
@@ -633,17 +608,6 @@ CI (`.github/workflows/ci.yml`) runs secret-scan + build + check + test + `smoke
 deploys via Vercel (`vercel.json`); the indexer via its Dockerfile (Railway/Fly/Render/VM). Full
 runbook in [docs/ship-runbook.md](docs/ship-runbook.md) and [docs/deployment.md](docs/deployment.md).
 
-## Developer error prevention
-
-The project explicitly handles and documents common mistakes: invalid address/calldata, odd-length
-hex (`0x0`), negative value, out-of-range slippage, selector-only calldata, empty agent/policy id,
-wrong chain id, missing contract address, policy/action mismatch, RPC simulation failure, wallet
-rejection, insufficient funds, indexer unavailable, read-only SDK used for writes, slow sync from
-block `0`. SDK + REST errors return stable `code` / `message` / `action`. See
-[docs/common-mistakes.md](docs/common-mistakes.md).
-
----
-
 ## Limitations
 
 Dev Alpha; Mantle Sepolia only; not audited; no token; no mainnet custody claims. Reputation is a
@@ -659,6 +623,7 @@ DSL. See [docs/limitations.md](docs/limitations.md) and
 
 ## Documentation
 
+- [Function Reference (FUNCTIONS.md)](FUNCTIONS.md) - every SDK method, CLI command, MCP tool, REST route, and contract entrypoint in one place.
 - [Docs Index](docs/README.md) - recommended navigation map for developers, judges, and release reviewers.
 
 - [Getting Started](docs/getting-started.md) | [Architecture](docs/architecture.md) | [API Reference](docs/api-reference.md) | [Product Logic](docs/product-logic.md)

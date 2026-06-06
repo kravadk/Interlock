@@ -11,6 +11,7 @@ import { checkActionWithPolicy, type PreflightAction, type PreflightDecision } f
 import { explainDecision, aiEnabled, type AiExplanation } from "../lib/ai";
 import { explorerTxUrl, hasGuardConfigured, mantleRpcUrl, webContracts } from "../lib/contracts";
 import { fetchSnapshot, type SnapshotSource } from "../lib/snapshot";
+import { clearRecentTx, loadRecentTx, rememberTx, type RecentTx } from "../lib/pending-tx";
 import { syncYields, type ActionProposal, type IndexerAction, type IndexerAgent, type IndexerPolicy, type YieldDataPoint } from "../lib/indexer";
 import { useLiveRefresh } from "./hooks/useLiveRefresh";
 import {
@@ -49,7 +50,6 @@ const DEFAULT_POLICY_ID = process.env.NEXT_PUBLIC_DEFAULT_POLICY_ID?.trim() ?? "
 const DEFAULT_TARGET = normalizeDefaultAddress(process.env.NEXT_PUBLIC_DEFAULT_ACTION_TARGET) ?? webContracts.agentRegistry;
 const DEFAULT_SELECTOR = normalizeDefaultSelector(process.env.NEXT_PUBLIC_DEFAULT_SELECTOR) ?? agentRegistryGetAgentSelector;
 const NON_ALLOWLISTED_TARGET = webContracts.actionAttestation;
-const ERC8004_IDENTITY_REGISTRY = process.env.NEXT_PUBLIC_ERC8004_IDENTITY_REGISTRY?.trim() ?? "";
 const policyPacks = listMantleEcosystemPolicyPacks();
 
 export type BundleReviewUiReport = {
@@ -77,6 +77,9 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [source, setSource] = useState<SnapshotSource>("rpc");
+  // Recovers a recently-submitted write after a mid-flow page reload (read from sessionStorage on mount).
+  const [recentTx, setRecentTx] = useState<RecentTx>();
+  useEffect(() => setRecentTx(loadRecentTx()), []);
 
   const [agentId, setAgentId] = useState(DEFAULT_AGENT_ID);
   const [policyId, setPolicyId] = useState(DEFAULT_POLICY_ID);
@@ -140,6 +143,12 @@ export default function App() {
       setActions(snapshot.actions);
       setProposals(snapshot.proposals ?? []);
       setEcosystemYields(snapshot.ecosystemYields ?? []);
+      // The RPC fallback resolves to an empty snapshot even when the chain reads failed; surface
+      // that as a retryable warning instead of silently showing an empty dashboard.
+      if (snapshot.health?.lastSyncError) {
+        const actionable = actionableTxError(new Error(snapshot.health.lastSyncError), "Dashboard refresh");
+        setLoadError(`${actionable.message} ${actionable.suggestedFix}`);
+      }
       const firstConfiguredAgent =
         snapshot.agents.find((agent) => snapshot.policies.some((policy) => policy.agentIds.includes(agent.agentId))) ??
         snapshot.agents[0];
@@ -555,6 +564,7 @@ export default function App() {
         signature: attest.signature,
       });
       setRecordTxHash(txHash);
+      rememberTx(txHash, "Decision attestation");
       push({ variant: "success", title: "Attestation confirmed", message: "ActionChecked was confirmed on Mantle Sepolia.", href: explorerTxUrl(txHash) });
       await refresh();
     } catch (error) {
@@ -596,6 +606,7 @@ export default function App() {
         data: calldata as Hex,
       });
       setExecTxHash(txHash);
+      rememberTx(txHash, "Enforced execution");
       push({ variant: "success", title: "Enforced execution confirmed", message: "PolicyGuardedExecutor transaction confirmed on Mantle Sepolia.", href: explorerTxUrl(txHash) });
       await refresh();
     } catch (error) {
@@ -686,7 +697,6 @@ export default function App() {
                   setAgentId(id);
                   void refresh();
                 }}
-                erc8004Registry={ERC8004_IDENTITY_REGISTRY}
               />
             )}
 
@@ -793,7 +803,26 @@ export default function App() {
             )}
           </div>
 
-          {loadError ? <div className="error-box">RPC / Recorder warning: {loadError}</div> : null}
+          {recentTx ? (
+            <div className="recent-tx-banner">
+              <span>Recent {recentTx.label.toLowerCase()} submitted before reload — it is on-chain.</span>
+              <a href={explorerTxUrl(recentTx.hash as Hex)} target="_blank" rel="noreferrer" className="mini-btn">
+                View on Mantlescan
+              </a>
+              <button type="button" className="mini-btn ghost" onClick={() => { clearRecentTx(); setRecentTx(undefined); }}>
+                Dismiss
+              </button>
+            </div>
+          ) : null}
+
+          {loadError ? (
+            <div className="error-box load-error">
+              <span>RPC / Recorder warning: {loadError}</span>
+              <button type="button" className="mini-btn" onClick={() => void refresh(true)} disabled={loading}>
+                {loading ? "Retrying…" : "Retry"}
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
