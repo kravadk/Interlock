@@ -4,10 +4,10 @@ import { Reveal } from "./Reveal";
 const FEATURES = [
   { icon: <Icon.shield s={18} />, title: "Pre-flight firewall", body: "Policy and simulation are weighed before a transaction is ever signed — not after the funds are gone." },
   { icon: <Icon.bolt s={18} />, title: "On-chain enforcement", body: "Route execution through the guard: a disallowed action reverts on-chain, not merely in advice." },
-  { icon: <Icon.scale s={18} />, title: "Dispute & slashing", body: "Two-sided bonds back each record; a challenger may contest within the window, and the winner takes both." },
-  { icon: <Icon.check s={18} />, title: "Committee of m-of-n", body: "Attestation can demand a threshold of distinct committee signatures — no single signer rules alone." },
-  { icon: <Icon.trending s={18} />, title: "Reputation oracle", body: "Every verdict rolls into a queryable agent score and tier that other contracts can gate upon." },
-  { icon: <Icon.eye s={18} />, title: "Evidence, sealed", body: "Each record carries an evidenceHash committing to intent, simulation, and checks — portable, verifiable proof." },
+  { icon: <Icon.scale s={18} />, title: "Dispute & slashing", body: "Two-sided bonds back each record; a challenger can contest within the window, and the winner is paid both bonds." },
+  { icon: <Icon.check s={18} />, title: "m-of-n committee", body: "Attestation can require a threshold of distinct committee signatures — no single signer decides alone." },
+  { icon: <Icon.trending s={18} />, title: "Reputation oracle", body: "Every decision updates a queryable agent score and tier that other contracts can gate on." },
+  { icon: <Icon.eye s={18} />, title: "Evidence hash", body: "Each record carries an evidenceHash committing to intent, simulation, and checks — portable, verifiable proof." },
 ];
 
 export function Features() {
@@ -16,11 +16,11 @@ export function Features() {
       <div className="az-container">
         <div className="az-head">
           <Reveal>
-            <span className="az-num">The instruments</span>
-            <h2 className="az-h2 az-serif">Advisory, enforced, and accountable</h2>
+            <span className="az-num">Capabilities</span>
+            <h2 className="az-h2">Advisory, enforced, and accountable</h2>
             <p className="az-lead">
-              Not a logging wrapper — a full order of safety: deterministic checks, on-chain enforcement,
-              economic disputes, decentralized attestation, and reputation.
+              More than a logging wrapper: deterministic checks, on-chain enforcement, economic
+              disputes, m-of-n attestation, and reputation.
             </p>
           </Reveal>
         </div>

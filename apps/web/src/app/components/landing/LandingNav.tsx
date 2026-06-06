@@ -88,7 +88,7 @@ export function LandingNav() {
             <span>Interlock</span>
           </Link>
           <nav className="az-nav-links">
-            <a className="az-ulink" href="#examination">The examination</a>
+            <a className="az-ulink" href="#examination">How it works</a>
             <a className="az-ulink" href="#builders">For builders</a>
             <a className="az-ulink" href={explorerAddressUrl(webContracts.actionAttestation)} target="_blank" rel="noreferrer">
               The seal

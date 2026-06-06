@@ -16,18 +16,18 @@ export function Hero() {
         >
           <span className="az-eyebrow">Pre-flight firewall · Mantle Sepolia</span>
           <h1 className="az-display">
-            Every action an agent takes,<br />
-            <em>examined</em> before it is signed.
+            Check every agent transaction<br />
+            <em>before</em> it is signed.
           </h1>
           <p className="az-lead">
-            Interlock is the chancellery for autonomous agents — it weighs each transaction against an
-            on-chain policy, a live simulation, and an advisory AI, then <strong>seals the verdict
-            on-chain</strong> as disputable evidence.
+            Interlock is a pre-flight firewall for AI agents on Mantle. It checks each transaction
+            against an on-chain policy and a live simulation, returns a deterministic <strong>ALLOW or
+            BLOCK</strong>, and records the decision on-chain as evidence.
           </p>
           <div className="az-cta-row">
             <Link href="/app" className="az-btn acid lg">Enter the control plane</Link>
             <a className="az-btn ghost lg" href={explorerAddressUrl(webContracts.actionAttestation)} target="_blank" rel="noreferrer">
-              Read the seal ↗
+              View a record ↗
             </a>
           </div>
           <div className="az-hero-meta">

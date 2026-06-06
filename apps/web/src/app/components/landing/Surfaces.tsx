@@ -50,10 +50,10 @@ export function Surfaces() {
         <div className="az-head">
           <Reveal>
             <span className="az-num">For builders</span>
-            <h2 className="az-h2 az-serif">One gateway, in front of any agent</h2>
+            <h2 className="az-h2">One gateway, in front of any agent</h2>
             <p className="az-lead">
-              The same verdict across SDK, REST, MCP, and CLI — so a developer never hand-wires
-              checkAction → sendTransaction → recordDecision again.
+              The same decision across SDK, REST, MCP, and CLI — so you don't re-wire
+              checkAction → sendTransaction → recordDecision for every agent.
             </p>
           </Reveal>
         </div>

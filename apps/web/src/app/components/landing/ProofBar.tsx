@@ -50,8 +50,8 @@ export function ProofBar() {
     <section className="az-section ink">
       <div className="az-container">
         <div className="az-head">
-          <span className="az-num">The ledger</span>
-          <h2 className="az-h2">Not a mock. Every figure is read live from Mantle Sepolia.</h2>
+          <span className="az-num">Live state</span>
+          <h2 className="az-h2">Not a mock. Every number is read live from Mantle Sepolia.</h2>
         </div>
         <div className="az-ledger">
           <div className="az-ledger-cell">

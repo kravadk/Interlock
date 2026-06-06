@@ -9,12 +9,12 @@ export function CTASection() {
       <Reveal>
         <div className="az-manifesto">
           <h2>
-            Let agents act. <em>Never</em> let them go rogue.
+            Let agents transact. <em>Never</em> unchecked.
           </h2>
           <div className="az-cta-row">
             <Link href="/app" className="az-btn acid lg">Enter the control plane</Link>
             <a className="az-btn ghost lg" href={explorerAddressUrl(webContracts.actionAttestation)} target="_blank" rel="noreferrer">
-              View the seal on Mantlescan ↗
+              View a record on Mantlescan ↗
             </a>
           </div>
         </div>

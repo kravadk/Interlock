@@ -21,21 +21,21 @@ export function BenchmarkTeaser() {
         <Reveal>
           <div className="az-trials">
             <div>
-              <span className="az-num">The trials — X in number</span>
-              <h2 className="az-h2" style={{ marginTop: 14 }}>Score an agent against ten real attacks</h2>
+              <span className="az-num">Benchmark</span>
+              <h2 className="az-h2" style={{ marginTop: 14 }}>Score an agent against 10 safety scenarios</h2>
               <p className="az-lead" style={{ marginTop: 18 }}>
                 A repeatable suite runs safe and adversarial actions through the live firewall and returns a
-                Dev-Alpha evidence score with on-chain attestations — published as a shareable Safety Card.
+                Dev-Alpha evidence score with on-chain attestations.
               </p>
               <div className="az-cta-row" style={{ marginTop: 28 }}>
-                <Link href="/app" className="az-btn acid">Run the trials</Link>
-                <Link href="/agent/1" className="az-btn ghost" style={{ color: "var(--paper)" }}>View a Safety Card ↗</Link>
+                <Link href="/app" className="az-btn acid">Run the suite</Link>
+                <Link href="/agent/1" className="az-btn ghost">View an agent card ↗</Link>
               </div>
             </div>
             <div className="az-trial-list">
               {TRIALS.map((trial, i) => (
                 <div key={trial.label} className="az-trial">
-                  <span style={{ color: "var(--tx-paper-2)" }}>
+                  <span style={{ color: "var(--tx-3)" }}>
                     {String(i + 1).padStart(2, "0")} · {trial.label}
                   </span>
                   <span className={`v ${trial.k}`}>{trial.v}</span>

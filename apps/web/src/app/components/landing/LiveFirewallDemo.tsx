@@ -28,7 +28,7 @@ const SCENARIOS: Scenario[] = [
     live: { to: webContracts.agentRegistry, value: "0", data: GET_AGENT_1 },
   },
   {
-    short: "Unknown target", intent: "An agent calls a contract not on the charter", verdict: "BLOCK", reason: "TARGET_NOT_ALLOWED", risk: 88,
+    short: "Unknown target", intent: "An agent calls a contract that isn't allowlisted", verdict: "BLOCK", reason: "TARGET_NOT_ALLOWED", risk: 88,
     checks: [
       { label: "Target allowlisted", ok: false }, { label: "Selector allowed", ok: true },
       { label: "Value within limit", ok: true }, { label: "Simulation passed", ok: true },
