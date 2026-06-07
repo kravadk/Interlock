@@ -469,6 +469,8 @@ node scripts/env-run.mjs pnpm --filter @interlock/contracts exec tsx scripts/dep
 node scripts/env-run.mjs pnpm --filter @interlock/contracts exec tsx scripts/deploy-dispute.ts   # DisputeEscrow
 node scripts/env-run.mjs pnpm --filter @interlock/contracts exec tsx scripts/deploy-extras.ts    # AttestorCommittee + ReputationOracle
 node scripts/env-run.mjs pnpm --filter @interlock/contracts exec tsx scripts/deploy-v3.ts        # ActionAttestationV3 (re-points AgentRegistry; preserves agents/policies)
+node scripts/env-run.mjs pnpm --filter @interlock/contracts exec tsx scripts/deploy-v4.ts        # ActionAttestationV4 (m-of-n committee recording; re-points AgentRegistry)
+node scripts/env-run.mjs pnpm --filter @interlock/contracts exec tsx scripts/deploy-token-guard.ts # TokenGuardedExecutor (on-chain ERC-20 token-rule enforcement)
 ```
 
 Each standalone script deploys one piece against the existing registries and patches
@@ -611,13 +613,18 @@ runbook in [docs/ship-runbook.md](docs/ship-runbook.md) and [docs/deployment.md]
 ## Limitations
 
 Dev Alpha; Mantle Sepolia only; not audited; no token; no mainnet custody claims. Reputation is a
-ratio + tier over simple counters (no time-decay yet). The AttestorCommittee is a verifier primitive
-(not yet wired into the live V3 recording path, which keeps a single attestor). RPC simulation is
-useful but not a complete economic risk engine. Token transfer/approve and RWA/yield checks are
-developer preflight evidence today; the deployed policy contracts still enforce target, selector,
-native value, active policy, signed attestation, and guarded execution, not a full on-chain token-risk
-DSL. See [docs/limitations.md](docs/limitations.md) and
-[docs/threat-model.md](docs/threat-model.md).
+ratio + tier over simple counters (no time-decay yet). RPC simulation is useful but not a complete
+economic risk engine.
+
+Two on-chain boundaries are now **deployed + live** on Mantle Sepolia: **`ActionAttestationV4`**
+(`0x69a2ec64285caa68934c4ee1c2f4fab29b08c083`) makes recording require an m-of-n `AttestorCommittee`
+(`recordAction` verifies `committee.isApproved(digest, signatures)`) instead of a single attestor — it
+is the active attestation contract (`AgentRegistry` is re-pointed to it; verified end-to-end on-chain).
+**`TokenGuardedExecutor`** (`0x4ab52cbfaf06afc1058c4bb05d7fb1511df01258`) enforces ERC-20 token rules
+(recipient/spender allowlists, max amount, unlimited-approve block) on-chain, not just as advisory
+preflight. The single-attestor V3 stays deployed for historical records. **RWA risk stays advisory by
+design** — Interlock holds no portfolio/custody, so on-chain exposure enforcement is infeasible. See
+[docs/limitations.md](docs/limitations.md) and [docs/threat-model.md](docs/threat-model.md).
 
 ---
 

@@ -76,7 +76,7 @@ export function actionAttestationFromBlock() {
   if (configured && /^\d+$/.test(configured)) {
     return BigInt(configured);
   }
-  return 39344216n;
+  return 39644615n; // ActionAttestationV4 deploy block (committee recording). V3 was 39344216.
 }
 
 export function explorerTxUrl(hash: Hex) {

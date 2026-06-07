@@ -57,8 +57,9 @@ export async function POST(request: Request) {
       attestor,
       decision,
       chainId: mantleSepolia.id,
-      verifyingContract: webContracts.actionAttestation,
+      verifyingContract: webContracts.actionAttestation, // ActionAttestationV4
       nonce: BigInt(body.nonce),
+      version: "4", // committee-verified recording; attestor must be a committee member
     });
     return Response.json({ signature, deadline: deadline.toString(), attestor: attestor.address });
   } catch (error) {

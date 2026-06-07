@@ -561,7 +561,8 @@ export default function App() {
         decision: decision.decision,
         reasonCode: decision.reason,
         deadline: BigInt(attest.deadline),
-        signature: attest.signature,
+        // 1-of-1 committee → a single attestor signature; V4 verifies it via AttestorCommittee.
+        signatures: [attest.signature],
       });
       setRecordTxHash(txHash);
       rememberTx(txHash, "Decision attestation");

@@ -355,6 +355,228 @@ export const actionAttestationAbi = [
   },
 ] as const;
 
+// ActionAttestationV4 — committee-verified recording. Identical to V3 except recordAction takes a
+// `bytes[] signatures` array (verified against an AttestorCommittee m-of-n), and committee admin
+// replaces the single attestor. The ActionChecked event is identical, so the indexer reuses it.
+export const actionAttestationV4Abi = [
+  {
+    type: "function",
+    name: "recordAction",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "calldataHash", type: "bytes32" },
+      { name: "selector", type: "bytes4" },
+      { name: "simulationHash", type: "bytes32" },
+      { name: "evidenceHash", type: "bytes32" },
+      { name: "decision", type: "uint8" },
+      { name: "reasonCode", type: "uint8" },
+      { name: "deadline", type: "uint256" },
+      { name: "signatures", type: "bytes[]" },
+    ],
+    outputs: [{ name: "actionCheckId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "challenge",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "actionCheckId", type: "uint256" },
+      { name: "reason", type: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "finalize",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "committee",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "setCommittee",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "newCommittee", type: "address" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "nonces",
+    stateMutability: "view",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "DISPUTE_WINDOW",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "DOMAIN_SEPARATOR",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "bytes32" }],
+  },
+  {
+    type: "function",
+    name: "getActionCheck",
+    stateMutability: "view",
+    inputs: [{ name: "actionCheckId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "agentId", type: "uint256" },
+          { name: "policyId", type: "uint256" },
+          { name: "target", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "calldataHash", type: "bytes32" },
+          { name: "selector", type: "bytes4" },
+          { name: "simulationHash", type: "bytes32" },
+          { name: "evidenceHash", type: "bytes32" },
+          { name: "decision", type: "uint8" },
+          { name: "reasonCode", type: "uint8" },
+          { name: "timestamp", type: "uint256" },
+          { name: "status", type: "uint8" },
+          { name: "finalizableAt", type: "uint256" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "event",
+    name: "ActionChecked",
+    inputs: [
+      { name: "actionCheckId", type: "uint256", indexed: true },
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: false },
+      { name: "value", type: "uint256", indexed: false },
+      { name: "calldataHash", type: "bytes32", indexed: false },
+      { name: "selector", type: "bytes4", indexed: false },
+      { name: "simulationHash", type: "bytes32", indexed: false },
+      { name: "decision", type: "uint8", indexed: false },
+      { name: "reasonCode", type: "uint8", indexed: false },
+      { name: "timestamp", type: "uint256", indexed: false },
+      { name: "status", type: "uint8", indexed: false },
+      { name: "finalizableAt", type: "uint256", indexed: false },
+      { name: "evidenceHash", type: "bytes32", indexed: false },
+    ],
+  },
+] as const;
+
+// TokenGuardedExecutor — policy checks + on-chain ERC-20 token-rule enforcement.
+export const tokenGuardedExecutorAbi = [
+  {
+    type: "function",
+    name: "execute",
+    stateMutability: "payable",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "data", type: "bytes" },
+    ],
+    outputs: [{ name: "", type: "bytes" }],
+  },
+  {
+    type: "function",
+    name: "previewExecute",
+    stateMutability: "view",
+    inputs: [
+      { name: "agentId", type: "uint256" },
+      { name: "policyId", type: "uint256" },
+      { name: "target", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "data", type: "bytes" },
+    ],
+    outputs: [
+      { name: "allowed", type: "bool" },
+      { name: "reasonCode", type: "uint8" },
+    ],
+  },
+  {
+    type: "function",
+    name: "setTokenRule",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "token", type: "address" },
+      {
+        name: "rule",
+        type: "tuple",
+        components: [
+          { name: "exists", type: "bool" },
+          { name: "allowUnlimitedApprove", type: "bool" },
+          { name: "maxAmount", type: "uint256" },
+          { name: "allowedRecipients", type: "address[]" },
+          { name: "allowedSpenders", type: "address[]" },
+        ],
+      },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "getTokenRule",
+    stateMutability: "view",
+    inputs: [
+      { name: "policyId", type: "uint256" },
+      { name: "token", type: "address" },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "exists", type: "bool" },
+          { name: "allowUnlimitedApprove", type: "bool" },
+          { name: "maxAmount", type: "uint256" },
+          { name: "allowedRecipients", type: "address[]" },
+          { name: "allowedSpenders", type: "address[]" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "event",
+    name: "ActionEnforced",
+    inputs: [
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "policyId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: true },
+      { name: "value", type: "uint256", indexed: false },
+      { name: "selector", type: "bytes4", indexed: false },
+      { name: "caller", type: "address", indexed: false },
+    ],
+  },
+  { type: "error", name: "TargetNotAllowed", inputs: [] },
+  { type: "error", name: "SelectorNotAllowed", inputs: [] },
+  { type: "error", name: "ValueLimitExceeded", inputs: [] },
+  { type: "error", name: "TokenRecipientNotAllowed", inputs: [] },
+  { type: "error", name: "TokenSpenderNotAllowed", inputs: [] },
+  { type: "error", name: "TokenAmountExceeded", inputs: [] },
+  { type: "error", name: "UnlimitedApproveBlocked", inputs: [] },
+  { type: "error", name: "NotPolicyOwner", inputs: [] },
+  { type: "error", name: "ValueMismatch", inputs: [] },
+] as const;
+
 export const testStrategyVaultAbi = [
   {
     type: "event",

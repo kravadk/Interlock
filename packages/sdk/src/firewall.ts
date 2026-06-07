@@ -15,9 +15,11 @@ import {
   ReasonCode,
   parseActionCheckedArgs,
   actionAttestationAbi,
+  actionAttestationV4Abi,
   agentRegistryAbi,
   policyRegistryAbi,
   policyGuardedExecutorAbi,
+  tokenGuardedExecutorAbi,
   disputeEscrowAbi,
   attestorCommitteeAbi,
   reputationOracleAbi,
@@ -29,7 +31,7 @@ import {
   PolicyUpdateFailedError,
   WalletClientRequiredError,
 } from "./errors.js";
-import { signActionDecision } from "./attestation-signing.js";
+import { actionTypedData, signActionDecision } from "./attestation-signing.js";
 import { buildEvidenceReport } from "./evidence.js";
 import { calldataHash, evaluatePolicy, getSelector, hashJson } from "./policy.js";
 import { validatePolicyPack } from "./policy-pack.js";
@@ -173,6 +175,90 @@ export class InterlockFirewall {
       args: [input.agentId, input.policyId, input.target, input.value, input.data],
     })) as [boolean, number];
     return { allowed, reasonCode };
+  }
+
+  /* TokenGuardedExecutor — policy checks + on-chain ERC-20 token-rule enforcement. */
+
+  /** Set (or replace) an on-chain ERC-20 token rule for a (policy, token) pair. Policy owner only. */
+  async setTokenRule(input: {
+    guard: Address;
+    policyId: bigint;
+    token: Address;
+    rule: {
+      allowUnlimitedApprove?: boolean;
+      maxAmount?: bigint;
+      allowedRecipients?: Address[];
+      allowedSpenders?: Address[];
+    };
+  }): Promise<Hex> {
+    const walletClient = this.requireWalletClient("setTokenRule");
+    return walletClient.writeContract({
+      account: walletClient.account,
+      chain: this.chain,
+      address: input.guard,
+      abi: tokenGuardedExecutorAbi,
+      functionName: "setTokenRule",
+      args: [
+        input.policyId,
+        input.token,
+        {
+          exists: true,
+          allowUnlimitedApprove: input.rule.allowUnlimitedApprove ?? false,
+          maxAmount: input.rule.maxAmount ?? 0n,
+          allowedRecipients: input.rule.allowedRecipients ?? [],
+          allowedSpenders: input.rule.allowedSpenders ?? [],
+        },
+      ],
+    });
+  }
+
+  /** Route execution through the TokenGuardedExecutor — reverts on policy OR token-rule violation. */
+  async executeThroughTokenGuard(input: {
+    guard: Address;
+    agentId: bigint;
+    policyId: bigint;
+    target: Address;
+    value: bigint;
+    data: Hex;
+  }): Promise<Hex> {
+    const walletClient = this.requireWalletClient("executeThroughTokenGuard");
+    return walletClient.writeContract({
+      account: walletClient.account,
+      chain: this.chain,
+      address: input.guard,
+      abi: tokenGuardedExecutorAbi,
+      functionName: "execute",
+      args: [input.agentId, input.policyId, input.target, input.value, input.data],
+      value: input.value,
+    });
+  }
+
+  /** Authoritative on-chain preview of the token guard (policy + token rule), no execution. */
+  async previewTokenGuard(input: {
+    guard: Address;
+    agentId: bigint;
+    policyId: bigint;
+    target: Address;
+    value: bigint;
+    data: Hex;
+  }): Promise<{ allowed: boolean; reasonCode: number }> {
+    const [allowed, reasonCode] = (await this.publicClient.readContract({
+      address: input.guard,
+      abi: tokenGuardedExecutorAbi,
+      functionName: "previewExecute",
+      args: [input.agentId, input.policyId, input.target, input.value, input.data],
+    })) as [boolean, number];
+    return { allowed, reasonCode };
+  }
+
+  /** Read the on-chain ERC-20 token rule for a (policy, token) pair. */
+  async getTokenRule(guard: Address, policyId: bigint, token: Address) {
+    return this.publicClient.readContract({
+      address: guard,
+      abi: tokenGuardedExecutorAbi,
+      functionName: "getTokenRule",
+      args: [policyId, token],
+    });
   }
 
   /* DisputeEscrow — two-sided bonds + arbiter-resolved slashing (keyed by actionCheckId). */
@@ -765,7 +851,11 @@ export class InterlockFirewall {
   }
 
   async recordDecision(decision: FirewallDecision): Promise<Hex> {
-    return this.recordDecisionWithWalletClient(decision, this.requireWalletClient("recordDecision"));
+    // Records via the committee-verified ActionAttestationV4 path (contracts.actionAttestation is V4).
+    // The firewall's own account signs as a 1-of-1 committee member; for true m-of-n pass
+    // recordDecisionWithCommittee with multiple attestorAccounts. recordDecisionWithWalletClient
+    // remains available for explicit legacy V3 recording.
+    return this.recordDecisionWithCommittee({ decision });
   }
 
   async recordDecisionAndWait(decision: FirewallDecision): Promise<RecordDecisionResult> {
@@ -858,6 +948,86 @@ export class InterlockFirewall {
         ReasonCode[decision.reasonCode],
         deadline,
         signature,
+      ],
+    });
+  }
+
+  /**
+   * Record a decision against ActionAttestationV4, verified by an m-of-n AttestorCommittee. Each
+   * provided account signs the SAME EIP-712 digest (domain version "4", fixed nonce + deadline);
+   * the contract requires >= threshold DISTINCT committee members. For a 1-of-1 committee, pass a
+   * single account — the contract is m-of-n ready regardless.
+   */
+  async recordDecisionWithCommittee(input: {
+    decision: FirewallDecision;
+    /** V4 address; defaults to the configured `contracts.actionAttestation`. */
+    actionAttestationV4?: Address;
+    /** Committee signers; defaults to the firewall's own account (a 1-of-1 committee member). */
+    attestorAccounts?: Account[];
+    walletClient?: WalletClient & { account: Account };
+    ttlSeconds?: number;
+  }): Promise<Hex> {
+    this.validateDecision(input.decision);
+    const walletClient = input.walletClient ?? this.requireWalletClient("recordDecisionWithCommittee");
+    const v4 = input.actionAttestationV4 ?? this.contracts.actionAttestation;
+    const attestorAccounts = input.attestorAccounts ?? [walletClient.account];
+    if (attestorAccounts.length === 0) {
+      throw new AttestationFailedError(new Error("recordDecisionWithCommittee needs at least one committee signer."));
+    }
+    const decision = input.decision;
+    const nonce = (await withRpcRetry(() =>
+      this.publicClient.readContract({
+        address: v4,
+        abi: actionAttestationV4Abi,
+        functionName: "nonces",
+        args: [decision.agentId],
+      }),
+    )) as bigint;
+    const { evidenceHash } = buildEvidenceReport(decision);
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + (input.ttlSeconds ?? 3600));
+    // One typed-data digest signed by every committee member (identical nonce + deadline).
+    const typed = actionTypedData({
+      decision: {
+        agentId: decision.agentId,
+        policyId: decision.policyId,
+        target: decision.tx.to,
+        value: decision.tx.value,
+        calldataHash: decision.calldataHash,
+        selector: decision.selector,
+        simulationHash: decision.simulationHash,
+        evidenceHash,
+        decision: decision.decision,
+        reasonCode: decision.reasonCode,
+      },
+      chainId: this.chain.id,
+      verifyingContract: v4,
+      nonce,
+      deadline,
+      version: "4",
+    });
+    const signatures: Hex[] = [];
+    for (const account of attestorAccounts) {
+      signatures.push(await walletClient.signTypedData({ account, ...typed }));
+    }
+    return walletClient.writeContract({
+      account: walletClient.account,
+      chain: this.chain,
+      address: v4,
+      abi: actionAttestationV4Abi,
+      functionName: "recordAction",
+      args: [
+        decision.agentId,
+        decision.policyId,
+        decision.tx.to,
+        decision.tx.value,
+        decision.calldataHash,
+        decision.selector,
+        decision.simulationHash,
+        evidenceHash,
+        Decision[decision.decision],
+        ReasonCode[decision.reasonCode],
+        deadline,
+        signatures,
       ],
     });
   }

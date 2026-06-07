@@ -11,6 +11,7 @@ import {
 } from "viem";
 import {
   actionAttestationAbi,
+  actionAttestationV4Abi,
   agentRegistryAbi,
   Decision,
   disputeEscrowAbi,
@@ -90,7 +91,8 @@ export type RecordActionInput = {
   decision: keyof typeof Decision;
   reasonCode: keyof typeof ReasonCode;
   deadline: bigint;
-  signature: Hex;
+  // >= threshold committee-member signatures over the EIP-712 digest (V4). 1-of-1 → a single sig.
+  signatures: Hex[];
 };
 
 export type RegisterAgentInput = {
@@ -259,7 +261,7 @@ export async function recordActionFromWallet(input: RecordActionInput): Promise<
     account: input.account,
     chain: mantleSepolia,
     address: input.actionAttestation,
-    abi: actionAttestationAbi,
+    abi: actionAttestationV4Abi,
     functionName: "recordAction",
     args: [
       input.agentId,
@@ -273,7 +275,7 @@ export async function recordActionFromWallet(input: RecordActionInput): Promise<
       Decision[input.decision],
       ReasonCode[input.reasonCode],
       input.deadline,
-      input.signature,
+      input.signatures,
     ],
   });
   await waitForConfirmedReceipt(txHash);

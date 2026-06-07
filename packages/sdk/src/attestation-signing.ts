@@ -24,11 +24,13 @@ export function actionTypedData(params: {
   verifyingContract: Address;
   nonce: bigint;
   deadline: bigint;
+  /** EIP-712 domain version: "3" for ActionAttestationV3 (default), "4" for V4 (committee). */
+  version?: string;
 }) {
   return {
     domain: {
       name: "AgentOps",
-      version: "3",
+      version: params.version ?? "3",
       chainId: params.chainId,
       verifyingContract: params.verifyingContract,
     },
@@ -79,6 +81,7 @@ export async function signActionDecision(options: {
   nonce: bigint;
   ttlSeconds?: number;
   now?: number;
+  version?: string;
 }): Promise<AttestationSignature> {
   const now = options.now ?? Math.floor(Date.now() / 1000);
   const deadline = BigInt(now + (options.ttlSeconds ?? 3600));
@@ -88,6 +91,7 @@ export async function signActionDecision(options: {
     verifyingContract: options.verifyingContract,
     nonce: options.nonce,
     deadline,
+    version: options.version,
   });
   const signature = await options.walletClient.signTypedData({
     account: options.attestor,
