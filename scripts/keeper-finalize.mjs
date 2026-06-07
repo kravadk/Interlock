@@ -124,7 +124,16 @@ async function main() {
 
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey || /^0x0+$/.test(privateKey)) {
-    fail("Set PRIVATE_KEY to finalize (or pass --check-only).", noFail);
+    // No signer configured: report the candidates and no-op (do NOT fail). The scheduled keeper is
+    // best-effort cleanup — a missing key is an operational gap, not a CI failure. Set PRIVATE_KEY
+    // (a funded Mantle Sepolia key) as a repo secret to actually finalize.
+    console.log(
+      JSON.stringify(
+        { ok: true, finalized: [], note: "PRIVATE_KEY not set — candidates reported, nothing finalized.", ...report },
+        null,
+        2,
+      ),
+    );
     return;
   }
 

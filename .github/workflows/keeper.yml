@@ -1,11 +1,12 @@
 name: keeper
 
-# On-chain finalize keeper. Periodically finalizes ActionAttestationV2 records whose
+# On-chain finalize keeper. Periodically finalizes ActionAttestation records whose
 # dispute window has closed (and that were not challenged). Closes the attestation
 # lifecycle without anyone sending a manual tx.
 #
 # Requires repo secret PRIVATE_KEY (a funded Mantle Sepolia key). Without it the
-# check-only step still runs and reports candidates; the finalize step no-ops safely.
+# check-only step still runs and reports candidates; the finalize step no-ops safely
+# (reports candidates, exits 0 — it does not fail the scheduled run).
 
 on:
   schedule:
@@ -40,9 +41,12 @@ jobs:
         run: pnpm keeper:finalize:check
         env:
           MANTLE_RPC_URL: ${{ secrets.MANTLE_RPC_URL }}
+          # ActionAttestationV4 deploy block — scan from here instead of block 0 (~4400 fewer log requests).
+          FROM_BLOCK: "39644615"
 
       - name: Finalize closed records
         run: pnpm keeper:finalize
         env:
           MANTLE_RPC_URL: ${{ secrets.MANTLE_RPC_URL }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          FROM_BLOCK: "39644615"
