@@ -35,10 +35,14 @@ export const deployedAddresses: { mantleSepolia: InterlockDeploymentAddresses } 
     // ERC8004_IDENTITY_REGISTRY / ERC8004_REPUTATION_REGISTRY override for other chains/forks.
     erc8004IdentityRegistry: "0x8004A3718bD35CF767BC0E718bf21Ec4073502f0" as Address,
     erc8004ReputationRegistry: "0x8004B1BcAb4228199Af728fF90Ed23dCc9b0Fa63" as Address,
-    // TokenGuardedExecutor (token-rule enforcement, block 39644566) is live + usable now (additive).
-    // ActionAttestationV4 (committee recording, block 39644615) is DEPLOYED but NOT re-pointed yet —
-    // V3 stays the live reputation writer until the web record path is migrated to V4.
+    // TokenGuardedExecutor (token-rule enforcement, block 39644566) — live + usable (additive).
+    // ActionAttestationV4 (committee recording, block 39644615) is the ACTIVE attestation contract
+    // (`actionAttestation` above points to it; AgentRegistry is re-pointed). V3 kept for history.
     tokenGuardedExecutor: "0x4ab52cbfaf06afc1058c4bb05d7fb1511df01258" as Address,
     actionAttestationV4: "0x69a2ec64285caa68934c4ee1c2f4fab29b08c083" as Address,
+    // Strategy-agent venue (deployed 2026-06-09) — the AI yield-strategy demo allocates into this vault
+    // via the router, every move guarded by the firewall. Demo agent/policy = 13/13 (server env).
+    testStrategyVault: "0x15e08d2aa6eed0f39f35554c46558749cead26c0" as Address,
+    testStrategyRouter: "0x0b62f5482e557e31ffd1690fa9faacaa1dd62a6b" as Address,
   },
 };
