@@ -249,6 +249,27 @@ RECORDER_URL=http://127.0.0.1:8787 pnpm --filter @interlock/agent-demo goal -- -
 The same loop drives the **Agent Demo** tab via `/api/demo/run` (server-only key). See
 [`apps/agent-demo/README.md`](apps/agent-demo/README.md).
 
+### AI yield-strategy agent (trades through the firewall)
+
+The **Strategy Agent** tab (`/api/strategy-demo/run`) is an AI trading/strategy agent that reads **live
+DefiLlama Mantle yields** and ranks them with a deterministic, explainable strategy
+(`pickAllocation` — APY × liquidity confidence, skipping thin/absurd-APY pools), then routes the chosen
+allocation **through the firewall** (`runGatewayAction` "execute-if-allowed"): an allocation within
+limits executes on-chain into the strategy vault; an over-budget trade is **blocked** — every decision
+recorded on-chain (committee-verified). This is the "AI Trading & Strategy" surface: real signal → real
+strategy → enforced risk → on-chain auditability. Setup + flow in
+[docs/demo-script.md](docs/demo-script.md); rubric mapping in [docs/submission.md](docs/submission.md).
+
+## Business & GTM
+
+Every team shipping autonomous on-chain agents needs a safety + compliance layer they don't have to
+build. Interlock is that layer, drop-in via SDK / MCP / CLI / REST. **Who pays:** agent/trading-bot
+teams, custodians, and DeFi protocols exposing agent access. **Revenue paths:** metered attestations
+(pay-per-recorded-decision), a hosted Recorder/analytics SaaS, and enterprise policy-pack + committee
+operation. **Wedge:** the firewall + on-chain flight recorder; **moat:** the auditable decision history
+and the m-of-n attestor committee. A protocol token (out of scope for Dev Alpha) would coordinate the
+committee (stake/slash) and meter attestations.
+
 ---
 
 ## SDK

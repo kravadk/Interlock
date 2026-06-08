@@ -41,6 +41,7 @@ import {
   PoliciesView,
   PreflightView,
   RecorderView,
+  StrategyAgentView,
 } from "./views";
 import { buildCalldata, normalizeDefaultAddress, normalizeDefaultSelector } from "./lib/default-action";
 import { actionableTxError } from "../lib/tx-error";
@@ -771,6 +772,7 @@ export default function App() {
             )}
 
             {active === "agent-demo" && <AgentDemoView />}
+            {active === "strategy-agent" && <StrategyAgentView />}
 
             {active === "recorder" && (
               <RecorderView

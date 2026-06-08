@@ -4,6 +4,7 @@ export * from "./agent-adapter.js";
 export * from "./attestation-signing.js";
 export * from "./agent-tool.js";
 export * from "./benchmark.js";
+export * from "./strategy/yield-agent.js";
 export * from "./byreal-adapter.js";
 export * from "./calldata.js";
 export * from "./abi-policy-builder.js";

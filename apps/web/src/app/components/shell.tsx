@@ -16,6 +16,7 @@ export type ActiveView =
   | "preflight"
   | "benchmark"
   | "agent-demo"
+  | "strategy-agent"
   | "recorder"
   | "analytics"
   | "integrate";
@@ -29,6 +30,7 @@ export const NAV: NavEntry[] = [
   { id: "preflight", label: "Preflight", icon: "exchange", section: "Action Review", sub: "Agent proposes a transaction, Interlock checks it, then returns allow or block." },
   { id: "benchmark", label: "Benchmark", icon: "gift", section: "Benchmark Arena", sub: "Repeatable, judge-friendly safety scenarios run against the live firewall." },
   { id: "agent-demo", label: "Agent Demo", icon: "bolt", section: "Live Agent Demo", sub: "Run an autonomous agent through the firewall live — decisions are recorded on-chain in real time." },
+  { id: "strategy-agent", label: "Strategy Agent", icon: "watchlist", section: "AI Yield-Strategy Agent", sub: "An AI strategy agent reads live Mantle yields, picks a risk-adjusted allocation, and trades through the firewall — every decision recorded on-chain." },
   { id: "recorder", label: "Recorder", icon: "market", section: "Flight Recorder", sub: "Every indexed action, agent, policy, and ecosystem link in one searchable table." },
   { id: "analytics", label: "Analytics", icon: "watchlist", section: "Reason Analytics", sub: "Why agent actions passed or were blocked, by reason code." },
   { id: "integrate", label: "Integrate", icon: "card", section: "Developer Integration", sub: "SDK snippets, environment, and deployed Interlock contracts for Mantle developers." },

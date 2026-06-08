@@ -31,6 +31,7 @@ import { RegisterAgentForm } from "./components/RegisterAgentForm";
 import { CreatePolicyForm } from "./components/CreatePolicyForm";
 import { OnboardingChecklist } from "./components/OnboardingChecklist";
 export { AgentDemoView } from "./components/AgentDemoView";
+export { StrategyAgentView } from "./components/StrategyAgentView";
 import type { ActiveView } from "./components/shell";
 import type { BundleReviewUiReport } from "./control-plane";
 import type { ConnectedWallet } from "../lib/wallet";

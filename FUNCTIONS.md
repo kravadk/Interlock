@@ -49,9 +49,10 @@ abbreviated; full types live in [docs/api-reference.md](docs/api-reference.md) a
 | --- | --- |
 | `checkAction(action): Promise<FirewallDecision>` | Pre-flight one action → ALLOW/BLOCK + reason. |
 | `checkActionBundle(bundle): Promise<AgentActionBundleReport>` | Pre-flight a multi-step route; ALLOW iff all pass. |
-| `recordDecision(decision): Promise<Hex>` | Record an attestation; returns tx hash. |
+| `recordDecision(decision): Promise<Hex>` | Record an attestation via the committee-verified ActionAttestationV4 path; returns tx hash. |
 | `recordDecisionAndWait(decision): Promise<RecordDecisionResult>` | Record + wait for `actionCheckId`. |
-| `recordDecisionWithWalletClient(...)` | Record using an injected wallet client (EIP-712 signed). |
+| `recordDecisionWithCommittee(input): Promise<Hex>` | Record on V4 with ≥threshold AttestorCommittee signatures (defaults to the firewall's own account as a 1-of-1 member). |
+| `recordDecisionWithWalletClient(...)` | Legacy single-attestor V3 record with an injected wallet client (EIP-712 signed). |
 | `recordBundleDecisions(report): Promise<RecordDecisionResult[]>` | Record every decision in a bundle. |
 | `guardedSendTransaction(action, options?): Promise<GuardedSendResult>` | Pre-flight → send if allowed → record. |
 | `runGatewayAction(action, options?): Promise<GatewayActionResult>` | Unified gateway: dry-run / record-only / execute-if-allowed / block-and-alert. |
@@ -62,6 +63,14 @@ abbreviated; full types live in [docs/api-reference.md](docs/api-reference.md) a
 | --- | --- |
 | `executeThroughGuard(input): Promise<Hex>` | Route execution through the guard; reverts on-chain if disallowed. |
 | `previewGuard(input): Promise<{ allowed, reasonCode }>` | Authoritative on-chain dry-run of the guard. |
+
+### Token-rule enforcement (TokenGuardedExecutor)
+| Method | Description |
+| --- | --- |
+| `setTokenRule(input): Promise<Hex>` | Set the on-chain ERC-20 rule for a (policy, token): recipient/spender allowlists, max amount, unlimited-approve flag. |
+| `executeThroughTokenGuard(input): Promise<Hex>` | Route execution through the token guard; reverts on policy OR token-rule violation. |
+| `previewTokenGuard(input): Promise<{ allowed, reasonCode }>` | On-chain dry-run of policy + token-rule checks. |
+| `getTokenRule(guard, policyId, token): Promise<TokenRule>` | Read the on-chain ERC-20 rule for a (policy, token). |
 
 ### Dispute window + escrow
 | Method | Description |
@@ -109,6 +118,11 @@ abbreviated; full types live in [docs/api-reference.md](docs/api-reference.md) a
 | `buildRwaRiskEvidence(input): RwaRiskEvidence` | Hashable advisory evidence (TVL/APY/freshness + portfolio). |
 | `rwaRiskToReasonCode(input)` | Map a finding to a reason code. |
 | `hashRwaRiskEvidence(evidence): Hex` | keccak256 of an evidence object (feeds `evidenceHash`). |
+
+### Strategy (AI yield agent)
+| Function | Description |
+| --- | --- |
+| `pickAllocation({ signals, config }): AllocationDecision` | Deterministic, explainable yield strategy: rank live pools by APY × liquidity confidence, skip thin/absurd-APY pools, pick + size a risk-adjusted allocation. Pure (no I/O). |
 
 ### ERC-8004
 | Function | Description |
@@ -236,6 +250,7 @@ Error classes: `InterlockError`, `ActionBlockedError`, `AttestationFailedError`,
 | `POST /api/ai` | Advisory AI (Claude tool-use); 503 if no key. |
 | `POST /api/attest` | EIP-712 record signing; 503 if no attestor key. |
 | `POST /api/demo/run` | One bounded agent-demo step. |
+| `POST /api/strategy-demo/run` | One AI yield-strategy step: live DefiLlama signal → `pickAllocation` → firewall execute-if-allowed → on-chain record. |
 | `POST /api/gateway` | Gateway action (4 modes). |
 | `POST /api/rpc` | RPC proxy (rate-limited). |
 | `GET /api/health` | Configured contracts + key presence + indexer reachability. |
@@ -257,11 +272,14 @@ Mantle Sepolia; addresses in [packages/shared/src/addresses.ts](packages/shared/
 ### PolicyRegistry
 `createPolicy(agentId, maxNativeValue, maxSlippageBps, targets, selectors) → policyId` · `updatePolicy(...)` · `setTargetAllowed(...)` · `setSelectorAllowed(...)` · `getPolicy` · `ownerOf` · `isTargetAllowed` · `isSelectorAllowed` · `getAllowedTargets` · `getAllowedSelectors` · `supportsPolicyEnumeration`.
 
-### ActionAttestationV3
-`recordAction(...args, deadline, signature)` (EIP-712 attestor-signed; opens dispute window) · `challenge(actionCheckId, reason)` · `finalize(actionCheckId)` · `getActionCheck(actionCheckId)` · `setAttestor(addr)` (owner) · `attestor()` · `nonces(agentId)` · `DISPUTE_WINDOW()`.
+### ActionAttestationV4 (active — committee-verified recording)
+`recordAction(...args, deadline, signatures[])` (EIP-712 digest verified against the AttestorCommittee m-of-n; opens dispute window) · `challenge(actionCheckId, reason)` (agent/policy owner or committee member) · `finalize(actionCheckId)` · `getActionCheck(actionCheckId)` · `setCommittee(addr)` (owner) · `committee()` · `nonces(agentId)` · `DISPUTE_WINDOW()`. Live at `0x69a2ec64285caa68934c4ee1c2f4fab29b08c083`; AgentRegistry is re-pointed to it. _ActionAttestationV3 (single-attestor `recordAction(...,signature)`) stays deployed for historical records._
 
 ### PolicyGuardedExecutor (enforcement)
 `execute(agentId, policyId, target, value, data)` (reverts disallowed actions) · `previewExecute(...) → (allowed, reasonCode)`.
+
+### TokenGuardedExecutor (policy + on-chain ERC-20 token rules)
+`setTokenRule(policyId, token, rule)` (policy owner) · `execute(agentId, policyId, target, value, data)` (reverts on policy OR token-rule violation) · `previewExecute(...) → (allowed, reasonCode)` · `getTokenRule(policyId, token)`. Live at `0x4ab52cbfaf06afc1058c4bb05d7fb1511df01258`. Enforces recipient/spender allowlists, max amount, and an unlimited-approve block for `transfer`/`transferFrom`/`approve`.
 
 ### DisputeEscrow (bonds + slashing)
 `bondRecord(actionCheckId)` · `openDispute(actionCheckId)` · `resolve(actionCheckId, challengerWins)` (arbiter) · `reclaimRecordBond(actionCheckId)` · `withdraw()` · `getDispute(actionCheckId)` · `setArbiter(addr)` (owner).
@@ -279,5 +297,6 @@ Mantle Sepolia; addresses in [packages/shared/src/addresses.ts](packages/shared/
 
 ## Dashboard views
 
-`apps/web` — landing `/`, control plane `/app` (9 tabs), public safety card `/agent/:id`. The per-tab
-breakdown lives in the README [Dashboard](README.md#dashboard) table.
+`apps/web` — landing `/`, control plane `/app` (10 tabs, incl. the **Strategy Agent** tab — live yield
+signal → risk-adjusted allocation → firewall decision, on-chain), public safety card `/agent/:id`. The
+per-tab breakdown lives in the README [Dashboard](README.md#dashboard) table.
