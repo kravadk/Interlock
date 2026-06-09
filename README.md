@@ -6,7 +6,7 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-34d39e?style=flat-square"></a>
   <img alt="Network" src="https://img.shields.io/badge/Mantle-Sepolia%205003-3fd5ff?style=flat-square">
   <img alt="Status" src="https://img.shields.io/badge/status-Dev%20Alpha-f5a623?style=flat-square">
-  <img alt="Hackathon" src="https://img.shields.io/badge/Turing%20Test%202026-AI%20DevTools-8b5cf6?style=flat-square">
+  <img alt="Track" src="https://img.shields.io/badge/BGA-AI%20Trading%20%26%20Strategy-8b5cf6?style=flat-square">
   <a href="FUNCTIONS.md"><img alt="Function Reference" src="https://img.shields.io/badge/reference-FUNCTIONS.md-6366f1?style=flat-square"></a>
 </p>
 
@@ -28,6 +28,33 @@ agent proposes action/bundle -> policy + calldata + simulation + risk evidence -
 
 **Status:** Mantle Sepolia **Developer Alpha**. Not audited; testnet only; no mainnet custody claims.
 See [SECURITY.md](SECURITY.md).
+
+---
+
+## For judges — BGA "AI Trading & Strategy"
+
+The risk-management + transparency layer that makes AI trading agents **safe and auditable**. We ship a
+working **AI yield-strategy agent that trades through the firewall** — every move pre-flighted and
+recorded on-chain.
+
+**See it in 60 seconds**
+- Live demo: `<your Vercel URL>` → **Strategy Agent** tab → *Run strategy agent*: live DefiLlama yields →
+  the strategy picks a pool (with an advisory AI review) → Interlock **ALLOWs** a sized allocation
+  (on-chain tx) → **BLOCKs** an over-budget trade → every decision recorded on-chain.
+- 90-second video: `<your video URL>` (script: [docs/demo-script.md](docs/demo-script.md))
+- Public proof, no wallet: **`/agent/13`** — this agent's full on-chain decision history, committee-verified.
+
+**Verify it's real (no mocks):** signal = live DefiLlama Mantle pools · venue = a deployed contract ·
+decisions = on-chain attestations. Proof on [Mantlescan](https://sepolia.mantlescan.xyz): allocation
+executed [`0x27d7…fb40`](https://sepolia.mantlescan.xyz/tx/0x27d7fe8afd157db9e100d5ba5b01fe5a58f274a1abe0780eb99f326ec5bdfb40)
+→ recorded on V4 [`0xcbe4…6e25`](https://sepolia.mantlescan.xyz/tx/0xcbe4ccca44fcbe8a9a3a0ba4ec55e07620d009be828661b40ed82a7806f66e25).
+
+**Live on Mantle Sepolia** — 8 contracts. Committee-verified recording **ActionAttestationV4**
+`0x69a2ec64285caa68934c4ee1c2f4fab29b08c083`; on-chain ERC-20 enforcement **TokenGuardedExecutor**
+`0x4ab52cbfaf06afc1058c4bb05d7fb1511df01258`; strategy venue vault `0x15e08d2a…` / router `0x0b62f548…`.
+
+**Rubric → evidence:** [docs/submission.md](docs/submission.md) maps every Part A + Part B criterion to
+concrete proof. Every function/route/contract: [FUNCTIONS.md](FUNCTIONS.md).
 
 ---
 
