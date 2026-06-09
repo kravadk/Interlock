@@ -1,19 +1,12 @@
 name: deploy-web
 
-# Hands-off production deploy of apps/web (Next.js) to Vercel on every push to main.
-# PRs get an automatic preview deploy whose URL is posted back as a comment.
+# Optional CLI-based Vercel deploy. The project deploys via Vercel's NATIVE GitHub integration
+# (production + PR previews), so this is redundant — it is manual-only (workflow_dispatch) to avoid
+# a failing check on every push. Enable a push trigger only if you stop using the native integration.
 # Requires repo secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID.
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    paths:
-      - "apps/web/**"
-      - "packages/**"
-      - "vercel.json"
-      - "pnpm-lock.yaml"
+  workflow_dispatch:
 
 concurrency:
   group: deploy-web-${{ github.ref }}
@@ -29,9 +22,6 @@ env:
 
 jobs:
   deploy:
-    # Skip cleanly unless the Vercel CLI secrets are configured. The project deploys via Vercel's
-    # native GitHub integration, so this CLI-based job is optional — don't fail CI when it's absent.
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

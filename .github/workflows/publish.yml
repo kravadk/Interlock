@@ -7,9 +7,7 @@ name: publish
 # Requires repo secret NPM_TOKEN (npm automation token with publish rights).
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 concurrency:
   group: publish-${{ github.ref }}
@@ -22,9 +20,6 @@ permissions:
 
 jobs:
   release:
-    # Skip cleanly unless an npm token is configured. Publishing to npm is optional for this project,
-    # so a missing token should not fail CI.
-    if: ${{ secrets.NPM_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
