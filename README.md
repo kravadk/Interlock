@@ -37,12 +37,12 @@ The risk-management + transparency layer that makes AI trading agents **safe and
 working **AI yield-strategy agent that trades through the firewall** — every move pre-flighted and
 recorded on-chain.
 
-**See it in 60 seconds**
-- Live demo: `<your Vercel URL>` → **Strategy Agent** tab → *Run strategy agent*: live DefiLlama yields →
-  the strategy picks a pool (with an advisory AI review) → Interlock **ALLOWs** a sized allocation
-  (on-chain tx) → **BLOCKs** an over-budget trade → every decision recorded on-chain.
-- 90-second video: `<your video URL>` (script: [docs/demo-script.md](docs/demo-script.md))
-- Public proof, no wallet: **`/agent/13`** — this agent's full on-chain decision history, committee-verified.
+**See it in 60 seconds** — live: **https://interlock-mantle.vercel.app**
+- Open the **Strategy Agent** tab → *Run strategy agent*: live DefiLlama yields → the strategy picks a
+  pool (with an advisory AI review) → Interlock **ALLOWs** a sized allocation (on-chain tx) → **BLOCKs**
+  an over-budget trade → every decision recorded on-chain. (Walkthrough: [docs/demo-script.md](docs/demo-script.md).)
+- Public proof, no wallet: **[interlock-mantle.vercel.app/agent/13](https://interlock-mantle.vercel.app/agent/13)**
+  — this agent's full on-chain decision history, committee-verified.
 
 **Verify it's real (no mocks):** signal = live DefiLlama Mantle pools · venue = a deployed contract ·
 decisions = on-chain attestations. Proof on [Mantlescan](https://sepolia.mantlescan.xyz): allocation
