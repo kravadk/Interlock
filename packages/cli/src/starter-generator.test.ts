@@ -43,7 +43,9 @@ describe("init-agent-app generator", () => {
       join(out, "src", "interlock.ts"),
     ]);
     expect(typecheck.status).toBe(0);
-  });
+    // Generates a starter then runs tsx + a full tsc typecheck on it — far slower than the 5s default,
+    // especially on CI runners. Give it a generous ceiling so CI is deterministic, not flaky.
+  }, 120_000);
 });
 
 function runNode(args: string[]) {

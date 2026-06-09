@@ -22,6 +22,9 @@ permissions:
 
 jobs:
   release:
+    # Skip cleanly unless an npm token is configured. Publishing to npm is optional for this project,
+    # so a missing token should not fail CI.
+    if: ${{ secrets.NPM_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

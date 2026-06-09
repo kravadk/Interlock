@@ -29,6 +29,9 @@ env:
 
 jobs:
   deploy:
+    # Skip cleanly unless the Vercel CLI secrets are configured. The project deploys via Vercel's
+    # native GitHub integration, so this CLI-based job is optional — don't fail CI when it's absent.
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
