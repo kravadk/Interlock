@@ -7,7 +7,7 @@
  * request/response shape is defined once.
  */
 
-export type AiTask = "explain" | "policy" | "summary";
+export type AiTask = "explain" | "policy" | "summary" | "strategy";
 
 /* ------------------------------------------------------------------ *
  * Request payloads (plain JSON — serializable, no bigint/viem types). *
@@ -44,10 +44,27 @@ export type SummaryPayload = {
   recentBlocks: { reasonCode: string; target: string; value: string }[];
 };
 
+export type StrategyPayloadPool = {
+  project: string;
+  symbol: string | null;
+  apy: number | null;
+  tvlUsd: number | null;
+  investable: boolean;
+  riskFlags: string[];
+};
+
+export type StrategyPayload = {
+  pools: StrategyPayloadPool[];
+  chosen: { project: string; symbol: string | null; apy: number | null } | null;
+  maxNativeValueMnt: string;
+  allocationPctBps: number;
+};
+
 export type AiRequest =
   | { task: "explain"; payload: ExplainPayload }
   | { task: "policy"; payload: PolicyPayload }
-  | { task: "summary"; payload: SummaryPayload };
+  | { task: "summary"; payload: SummaryPayload }
+  | { task: "strategy"; payload: StrategyPayload };
 
 /* ------------------------------------------------------------------ *
  * Response types.                                                     *
@@ -76,6 +93,16 @@ export type AiBlockSummary = {
   narrative: string;
   topRisks: string[];
   suggestions: string[];
+};
+
+export type AiStrategyAdvice = {
+  /** Whether the AI agrees with the deterministic pick (agreement = a strong signal). */
+  agree: boolean;
+  /** The pool the AI would pick (label), or "hold". Advisory only. */
+  recommendation: string;
+  reasoning: string;
+  riskFlags: string[];
+  confidence: number; // 0–100
 };
 
 /* ------------------------------------------------------------------ *
@@ -129,6 +156,22 @@ export const SUMMARY_TOOL = {
   },
 };
 
+export const STRATEGY_TOOL = {
+  name: "review_strategy",
+  description: "Review a deterministic yield allocation and give an independent advisory opinion.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      agree: { type: "boolean", description: "Do you agree with the deterministic pick?" },
+      recommendation: { type: "string", description: "The pool you would pick (project + symbol), or \"hold\"." },
+      reasoning: { type: "string", description: "2-3 sentences: why, and the key risk trade-off." },
+      riskFlags: { type: "array", items: { type: "string" }, description: "Concrete risks (e.g. low liquidity, APY sustainability)." },
+      confidence: { type: "integer", minimum: 0, maximum: 100 },
+    },
+    required: ["agree", "recommendation", "reasoning", "riskFlags", "confidence"],
+  },
+};
+
 /* ------------------------------------------------------------------ *
  * Runtime validators (hand-rolled — no zod dep). Reject malformed     *
  * tool output so the client falls back deterministically.            *
@@ -176,4 +219,18 @@ export function validateBlockSummary(v: unknown): AiBlockSummary | null {
   const o = v as Record<string, unknown>;
   if (!isStr(o.narrative) || !isStrArr(o.topRisks) || !isStrArr(o.suggestions)) return null;
   return { narrative: o.narrative, topRisks: o.topRisks, suggestions: o.suggestions };
+}
+
+export function validateStrategyAdvice(v: unknown): AiStrategyAdvice | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  if (typeof o.agree !== "boolean" || !isStr(o.recommendation) || !isStr(o.reasoning)) return null;
+  if (!isStrArr(o.riskFlags) || !isNum(o.confidence)) return null;
+  return {
+    agree: o.agree,
+    recommendation: o.recommendation,
+    reasoning: o.reasoning,
+    riskFlags: o.riskFlags,
+    confidence: Math.max(0, Math.min(100, Math.round(o.confidence))),
+  };
 }

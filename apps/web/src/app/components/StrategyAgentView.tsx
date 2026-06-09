@@ -14,6 +14,17 @@ type TopPool = {
   riskFlags: string[];
 };
 
+type StrategyMetrics = {
+  ranked: number;
+  investable: number;
+  skipped: number;
+  skipReasons: { tvlBelowFloor: number; apyTooHigh: number; missingData: number };
+  chosenApy: number | null;
+  allocationPctBps: number;
+};
+
+type AiAdvice = { agree: boolean; recommendation: string; reasoning: string; riskFlags: string[]; confidence: number };
+
 type StrategyStep = {
   step: number;
   mode: string;
@@ -30,6 +41,7 @@ type StrategyStep = {
   executed: boolean;
   txHash: string | null;
   explorerUrl: string | null;
+  metrics?: StrategyMetrics;
 };
 
 const strategySteps = 4; // 2 risk-sized allocations + 2 over-budget risk checks
@@ -37,12 +49,39 @@ const strategySteps = 4; // 2 risk-sized allocations + 2 over-budget risk checks
 export function StrategyAgentView() {
   const { push } = useToast();
   const [steps, setSteps] = useState<StrategyStep[]>([]);
+  const [aiByStep, setAiByStep] = useState<Record<number, AiAdvice | null>>({});
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
+
+  // Advisory AI review of the step's pick. Graceful: if /api/ai is unconfigured (503) it just stays hidden.
+  async function fetchAiReview(step: StrategyStep) {
+    if (!step.chosen) return;
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          task: "strategy",
+          payload: {
+            pools: step.topPools,
+            chosen: step.chosen,
+            maxNativeValueMnt: "policy cap",
+            allocationPctBps: step.metrics?.allocationPctBps ?? 0,
+          },
+        }),
+      });
+      if (!res.ok) return;
+      const json = (await res.json()) as { data?: AiAdvice };
+      if (json.data) setAiByStep((cur) => ({ ...cur, [step.step]: json.data! }));
+    } catch {
+      /* advisory only — ignore */
+    }
+  }
 
   async function runStrategy() {
     setError("");
     setSteps([]);
+    setAiByStep({});
     setRunning(true);
     try {
       for (let step = 0; step < strategySteps; step += 1) {
@@ -58,6 +97,7 @@ export function StrategyAgentView() {
         }
         const result = (await response.json()) as StrategyStep;
         setSteps((current) => [...current, result]);
+        void fetchAiReview(result);
         push({
           variant: result.allowed ? "success" : "error",
           title: `${result.decision} - ${result.mode}`,
@@ -127,6 +167,22 @@ export function StrategyAgentView() {
         </Panel>
       ) : null}
 
+      {signal?.metrics ? (
+        <Panel title="Strategy metrics" subtitle="Transparent + defensible — derived from the live ranking, not a black box.">
+          <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
+            <Metric label="Pools ranked" value={`${signal.metrics.ranked}`} />
+            <Metric label="Investable" value={`${signal.metrics.investable}`} />
+            <Metric label="Skipped" value={`${signal.metrics.skipped}`} />
+            <Metric label="Chosen APY" value={signal.metrics.chosenApy != null ? `${signal.metrics.chosenApy.toFixed(2)}%` : "—"} />
+            <Metric label="Allocation" value={`${(signal.metrics.allocationPctBps / 100).toFixed(0)}% of budget`} />
+            <Metric
+              label="Skipped by"
+              value={`${signal.metrics.skipReasons.tvlBelowFloor} low-TVL · ${signal.metrics.skipReasons.apyTooHigh} hi-APY · ${signal.metrics.skipReasons.missingData} no-data`}
+            />
+          </div>
+        </Panel>
+      ) : null}
+
       {steps.length || running ? (
         <Panel title="Strategy decisions" subtitle="Each step: agent proposes → firewall decides → recorded on-chain.">
           <div className="demo-stream">
@@ -144,6 +200,14 @@ export function StrategyAgentView() {
                   <div className="demo-step-meta" style={{ display: "block", marginBottom: 4 }}>
                     {item.rationale}
                   </div>
+                  {aiByStep[item.step] ? (
+                    <div className="demo-step-meta" style={{ display: "block", marginBottom: 4, opacity: 0.85 }}>
+                      <strong>AI review</strong> ({aiByStep[item.step]!.agree ? "agrees" : "disagrees"}, confidence{" "}
+                      {aiByStep[item.step]!.confidence}): {aiByStep[item.step]!.reasoning}
+                      {aiByStep[item.step]!.riskFlags.length ? ` — risks: ${aiByStep[item.step]!.riskFlags.join(", ")}` : ""}
+                      <em> · advisory only; the firewall decides.</em>
+                    </div>
+                  ) : null}
                   <div className="demo-step-meta">
                     <span>{item.reasonCode}</span>
                     <span>- risk {item.riskScore}</span>
@@ -176,5 +240,14 @@ export function StrategyAgentView() {
         </Panel>
       )}
     </>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px", display: "grid", gap: 2 }}>
+      <span style={{ fontSize: 11, opacity: 0.6 }}>{label}</span>
+      <strong style={{ fontSize: 13 }}>{value}</strong>
+    </div>
   );
 }

@@ -39,6 +39,22 @@ export type RankedPool = {
   investable: boolean;
 };
 
+/** Transparent strategy metrics — surfaced in the UI so the strategy is defensible, not a black box. */
+export type StrategyMetrics = {
+  /** Total pools considered. */
+  ranked: number;
+  /** Pools that passed every risk filter. */
+  investable: number;
+  /** Pools excluded by a risk filter. */
+  skipped: number;
+  /** Skip breakdown by reason. */
+  skipReasons: { tvlBelowFloor: number; apyTooHigh: number; missingData: number };
+  /** APY (%) of the chosen pool, or null if none. */
+  chosenApy: number | null;
+  /** Share of the budget allocated this step (0–10000 bps = liquidity confidence of the chosen pool). */
+  allocationPctBps: number;
+};
+
 export type AllocationDecision = {
   /** The best investable pool, or undefined if none passed the risk filters. */
   chosen?: YieldSignal;
@@ -48,7 +64,26 @@ export type AllocationDecision = {
   allocateWei: bigint;
   /** Plain-language rationale — also fed to the advisory AI "explain" task and into evidence. */
   rationale: string;
+  /** Transparent, defensible metrics derived from the ranking. */
+  metrics: StrategyMetrics;
 };
+
+function buildMetrics(ranked: RankedPool[], best?: RankedPool): StrategyMetrics {
+  const skipped = ranked.filter((p) => !p.investable);
+  const has = (p: RankedPool, flag: string) => p.riskFlags.includes(flag);
+  return {
+    ranked: ranked.length,
+    investable: ranked.length - skipped.length,
+    skipped: skipped.length,
+    skipReasons: {
+      tvlBelowFloor: skipped.filter((p) => has(p, "tvl-below-floor")).length,
+      apyTooHigh: skipped.filter((p) => has(p, "apy-too-high")).length,
+      missingData: skipped.filter((p) => has(p, "no-apy") || has(p, "no-tvl")).length,
+    },
+    chosenApy: best?.signal.apy ?? null,
+    allocationPctBps: best?.confidenceBps ?? 0,
+  };
+}
 
 function clampBps(n: number): number {
   if (!Number.isFinite(n) || n <= 0) return 0;
@@ -102,6 +137,7 @@ export function pickAllocation(input: {
       ranked,
       allocateWei: 0n,
       rationale: `No investable pool: all ${skipped} signal(s) failed risk filters (TVL ≥ $${config.minTvlUsd}, APY ≤ ${config.maxApy}%). Holding — nothing sent.`,
+      metrics: buildMetrics(ranked),
     };
   }
 
@@ -113,5 +149,5 @@ export function pickAllocation(input: {
     `Allocating ${pct}% of the budget, scaled by liquidity confidence; ` +
     `${ranked.filter((p) => !p.investable).length} pool(s) skipped on risk filters.`;
 
-  return { chosen: best.signal, ranked, allocateWei, rationale };
+  return { chosen: best.signal, ranked, allocateWei, rationale, metrics: buildMetrics(ranked, best) };
 }

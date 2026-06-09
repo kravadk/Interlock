@@ -25,6 +25,14 @@ export type MantleEcosystemPolicyPack = {
   approveWarning?: string;
   /** When true, the pack must not be applied until the integrating team supplies real protocol addresses. */
   requiresRealAddresses?: boolean;
+  /** Real production venue addresses (e.g. a mainnet DEX) the pack maps to, when one exists. */
+  productionVenue?: {
+    network: string;
+    lbRouter?: string;
+    moeRouter?: string;
+    moeFactory?: string;
+    lbFactory?: string;
+  };
 };
 
 export const mantleEcosystemPolicyPacks: MantleEcosystemPolicyPack[] = [
@@ -165,8 +173,18 @@ export const mantleEcosystemPolicyPacks: MantleEcosystemPolicyPack[] = [
     trackFit: ["AI Trading & Strategy", "Agentic Wallets & Economy", "AI DevTools"],
     ecosystem: ["Merchant Moe", "Mantle DeFi", "RealClaw-compatible trading agents"],
     mode: "template",
+    // Real Merchant Moe production venue on Mantle mainnet (verified from docs.merchantmoe.com/resources/contracts).
+    // The testnet strategy demo routes into the deployed strategy vault because Merchant Moe has no Sepolia
+    // deployment; on mainnet the yield-strategy agent would route THROUGH this router, guarded by Interlock.
+    productionVenue: {
+      network: "Mantle mainnet (5000)",
+      lbRouter: "0x013e138EF6008ae5FDFDE29700e3f2Bc61d21E3a",
+      moeRouter: "0xeaEE7EE68874218c3558b40063c42B82D3E7232a",
+      moeFactory: "0x5bef015ca9424a7c07b68490616a4c1f094bedec",
+      lbFactory: "0xa6630671775c4EA2743840F9A5016dCf2A104054",
+    },
     requiredAddresses: [
-      "Verified Merchant Moe router or LB router address supplied by the integrating team",
+      "Production router (see productionVenue: Mantle-mainnet Merchant Moe LB Router 0x013e138EF6008ae5FDFDE29700e3f2Bc61d21E3a) supplied by the integrating team — Merchant Moe has no Sepolia deployment, so the testnet demo uses the strategy vault",
       "Approved token addresses for the exact strategy route",
       "Optional approved liquidity pair/pool addresses if the skill can add liquidity",
     ],

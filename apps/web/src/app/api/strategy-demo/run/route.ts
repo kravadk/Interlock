@@ -107,6 +107,7 @@ export async function POST(request: Request) {
         chosen: decisionPlan.chosen
           ? { project: decisionPlan.chosen.project, symbol: decisionPlan.chosen.symbol ?? null, apy: decisionPlan.chosen.apy ?? null }
           : null,
+        metrics: decisionPlan.metrics,
         rationale: greedy
           ? `Risk check: agent attempted to allocate 20x the policy value limit — the firewall must block this.`
           : decisionPlan.rationale,

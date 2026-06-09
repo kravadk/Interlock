@@ -93,6 +93,17 @@ export default function AgentSafetyCardClient({ agentId }: { agentId: string }) 
     const risky = state.stats.blockedActions + state.stats.failedSimulations;
     return `${Math.round((risky / state.stats.totalActions) * 100)}% blocked/failed`;
   }, [state]);
+  const judge = useMemo(() => {
+    if (state.status !== "ready" || !state.stats || state.stats.totalActions === 0) return undefined;
+    const total = state.stats.totalActions;
+    const allowPct = Math.round((state.stats.allowedActions / total) * 100);
+    const counts = new Map<string, number>();
+    for (const a of state.actions) {
+      if (a.decision !== "ALLOW") counts.set(a.reasonCode, (counts.get(a.reasonCode) ?? 0) + 1);
+    }
+    const topBlockReasons = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    return { total, allowPct, topBlockReasons };
+  }, [state]);
 
   return (
     <main className="shell">
@@ -117,6 +128,45 @@ export default function AgentSafetyCardClient({ agentId }: { agentId: string }) 
       </section>
 
       <section className="grid">
+        {judge ? (
+          <article className="panel wide">
+            <header>
+              <div>
+                <h2>Verifiable on-chain · committee-verified</h2>
+                <p>
+                  Every decision by this agent is a tamper-proof on-chain attestation, verified by an m-of-n attestor
+                  committee (ActionAttestationV4). Audit any of them on the explorer below — nothing here is taken on trust.
+                </p>
+              </div>
+            </header>
+            <div className="safetyCard">
+              <div className="safetyGrid">
+                <Metric label="On-chain decisions" value={String(judge.total)} />
+                <Metric label="Allowed" value={`${judge.allowPct}%`} />
+                <Metric label="Blocked / failed" value={`${100 - judge.allowPct}%`} />
+                <Metric label="Evidence score" value={safetyScore} />
+                <Metric
+                  label="Top block reasons"
+                  value={judge.topBlockReasons.length ? judge.topBlockReasons.map(([r, c]) => `${r} (${c})`).join(", ") : "None"}
+                />
+                <LinkedMetric
+                  label="Recording contract"
+                  value={short(webContracts.actionAttestation)}
+                  href={explorerAddressUrl(webContracts.actionAttestation)}
+                />
+              </div>
+              <div className="sectionNav">
+                <button className="ghostButton" type="button" onClick={() => copyMarkdown(agentId, owner, policyIds, state.status === "ready" ? state.stats : undefined, latestAction, safetyScore)}>
+                  Copy proof (markdown)
+                </button>
+                <button className="ghostButton" type="button" onClick={() => copyEmbed(agentId)}>
+                  Copy embed snippet
+                </button>
+              </div>
+            </div>
+          </article>
+        ) : null}
+
         <article className="panel wide">
           <header>
             <div>

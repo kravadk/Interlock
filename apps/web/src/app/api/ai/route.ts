@@ -2,13 +2,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import {
   EXPLAIN_TOOL,
   POLICY_TOOL,
+  STRATEGY_TOOL,
   SUMMARY_TOOL,
   validateBlockSummary,
   validateExplanation,
   validatePolicyDraft,
+  validateStrategyAdvice,
   type AiRequest,
   type ExplainPayload,
   type PolicyPayload,
+  type StrategyPayload,
   type SummaryPayload,
 } from "../../../lib/ai-types";
 import { rateLimit } from "../../../lib/rate-limit";
@@ -43,7 +46,10 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
-  if (!body || (body.task !== "explain" && body.task !== "policy" && body.task !== "summary")) {
+  if (
+    !body ||
+    (body.task !== "explain" && body.task !== "policy" && body.task !== "summary" && body.task !== "strategy")
+  ) {
     return Response.json({ error: "Unknown task." }, { status: 400 });
   }
 
@@ -90,7 +96,7 @@ type RequestSpec = {
   model: string;
   system: string;
   user: string;
-  tool: typeof EXPLAIN_TOOL | typeof POLICY_TOOL | typeof SUMMARY_TOOL;
+  tool: typeof EXPLAIN_TOOL | typeof POLICY_TOOL | typeof SUMMARY_TOOL | typeof STRATEGY_TOOL;
   validate: (input: unknown) => unknown;
 };
 
@@ -133,6 +139,20 @@ function buildRequest(body: AiRequest): RequestSpec {
         tool: SUMMARY_TOOL,
         validate: validateBlockSummary,
       };
+    case "strategy":
+      return {
+        model: SONNET,
+        system:
+          "You are the strategy-review layer of Interlock, a pre-flight firewall for autonomous trading " +
+          "agents. A deterministic strategy has ALREADY picked a yield allocation from live Mantle pools, " +
+          "and the firewall — not you — decides whether it executes. Give an INDEPENDENT advisory opinion: " +
+          "do you agree with the pick, what is the key risk trade-off (liquidity, APY sustainability, " +
+          "concentration), and your confidence. You do NOT change the allocation or the firewall verdict. " +
+          "Be concise and concrete.",
+        user: strategyPrompt(body.payload),
+        tool: STRATEGY_TOOL,
+        validate: validateStrategyAdvice,
+      };
   }
 }
 
@@ -165,6 +185,28 @@ function policyPrompt(p: PolicyPayload): string {
     "",
     "Available ecosystem packs (prefer these selectors/targets when relevant):",
     packs || "(none)",
+  ].join("\n");
+}
+
+function strategyPrompt(p: StrategyPayload): string {
+  const pools = p.pools
+    .map((pool) => {
+      const apy = pool.apy != null ? `${pool.apy.toFixed(2)}% APY` : "no APY";
+      const tvl = pool.tvlUsd != null ? `$${Math.round(pool.tvlUsd).toLocaleString()} TVL` : "no TVL";
+      const status = pool.investable ? "investable" : `skipped (${pool.riskFlags.join(", ")})`;
+      return `  - ${pool.project}${pool.symbol ? ` ${pool.symbol}` : ""}: ${apy}, ${tvl} — ${status}`;
+    })
+    .join("\n");
+  const chosen = p.chosen
+    ? `${p.chosen.project}${p.chosen.symbol ? ` ${p.chosen.symbol}` : ""} at ${p.chosen.apy ?? "?"}% APY`
+    : "(none — holding)";
+  return [
+    `Live yield candidates (Mantle, from DefiLlama):\n${pools || "  (none)"}`,
+    "",
+    `Deterministic strategy picked: ${chosen}`,
+    `Sizing: ${p.allocationPctBps / 100}% of the budget (policy cap ${p.maxNativeValueMnt} MNT).`,
+    "",
+    "Do you agree? Flag the key risks and give your confidence.",
   ].join("\n");
 }
 

@@ -122,7 +122,7 @@ abbreviated; full types live in [docs/api-reference.md](docs/api-reference.md) a
 ### Strategy (AI yield agent)
 | Function | Description |
 | --- | --- |
-| `pickAllocation({ signals, config }): AllocationDecision` | Deterministic, explainable yield strategy: rank live pools by APY × liquidity confidence, skip thin/absurd-APY pools, pick + size a risk-adjusted allocation. Pure (no I/O). |
+| `pickAllocation({ signals, config }): AllocationDecision` | Deterministic, explainable yield strategy: rank live pools by APY × liquidity confidence, skip thin/absurd-APY pools, pick + size a risk-adjusted allocation. Returns transparent `metrics` (ranked/skipped/skip-reasons/chosen APY/allocation %). Pure (no I/O). |
 
 ### ERC-8004
 | Function | Description |
@@ -247,7 +247,7 @@ Error classes: `InterlockError`, `ActionBlockedError`, `AttestationFailedError`,
 ### Web API (Next.js, server-only keys, rate-limited)
 | Route | Description |
 | --- | --- |
-| `POST /api/ai` | Advisory AI (Claude tool-use); 503 if no key. |
+| `POST /api/ai` | Advisory AI (Claude tool-use): `explain` / `policy` / `summary` / `strategy` (reviews a yield allocation — advisory, firewall still decides); 503 if no key. |
 | `POST /api/attest` | EIP-712 record signing; 503 if no attestor key. |
 | `POST /api/demo/run` | One bounded agent-demo step. |
 | `POST /api/strategy-demo/run` | One AI yield-strategy step: live DefiLlama signal → `pickAllocation` → firewall execute-if-allowed → on-chain record. |

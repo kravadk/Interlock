@@ -77,6 +77,26 @@ describe("pickAllocation", () => {
     expect(d.rationale).toMatch(/No investable pool/);
   });
 
+  it("reports transparent metrics (counts, skip reasons, chosen APY, allocation %)", () => {
+    const d = pickAllocation({
+      config,
+      signals: [
+        sig({ poolId: "good", apy: 10, tvlUsd: 1_000_000 }), // investable, full confidence
+        sig({ poolId: "thin", apy: 20, tvlUsd: 1_000 }), // tvl-below-floor
+        sig({ poolId: "scam", apy: 9999, tvlUsd: 2_000_000 }), // apy-too-high
+        sig({ poolId: "nodata", apy: undefined, tvlUsd: 2_000_000 }), // no-apy
+      ],
+    });
+    expect(d.metrics.ranked).toBe(4);
+    expect(d.metrics.investable).toBe(1);
+    expect(d.metrics.skipped).toBe(3);
+    expect(d.metrics.skipReasons.tvlBelowFloor).toBe(1);
+    expect(d.metrics.skipReasons.apyTooHigh).toBe(1);
+    expect(d.metrics.skipReasons.missingData).toBe(1);
+    expect(d.metrics.chosenApy).toBe(10);
+    expect(d.metrics.allocationPctBps).toBe(10000);
+  });
+
   it("is deterministic and ranks investable pools first", () => {
     const signals = [
       sig({ poolId: "thin", apy: 40, tvlUsd: 1_000 }),
