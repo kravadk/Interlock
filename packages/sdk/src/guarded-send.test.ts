@@ -70,6 +70,7 @@ describe("guardedSendTransaction", () => {
     const blockedDecision: FirewallDecision = { ...decision, allowed: false, decision: "BLOCK", reasonCode: "TARGET_NOT_ALLOWED" };
     firewall.checkAction = vi.fn(async () => blockedDecision);
     firewall.recordDecision = vi.fn(async () => hash);
+    (firewall as any).publicClient = { waitForTransactionReceipt: vi.fn(async () => ({ status: "success" })) };
     await expect(firewall.guardedSendTransaction(action)).rejects.toThrow(ActionBlockedError);
   });
 
@@ -78,6 +79,7 @@ describe("guardedSendTransaction", () => {
     const blockedDecision: FirewallDecision = { ...decision, allowed: false, decision: "BLOCK", reasonCode: "TARGET_NOT_ALLOWED" };
     firewall.checkAction = vi.fn(async () => blockedDecision);
     firewall.recordDecision = vi.fn(async () => hash);
+    (firewall as any).publicClient = { waitForTransactionReceipt: vi.fn(async () => ({ status: "success" })) };
     await expect(firewall.guardedSendTransaction(action, { throwOnBlock: false })).resolves.toMatchObject({ sent: false });
   });
 });

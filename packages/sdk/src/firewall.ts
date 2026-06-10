@@ -1056,6 +1056,21 @@ export class InterlockFirewall {
     });
   }
 
+  /**
+   * Record a decision AND wait for it to mine, so the per-agent attestation nonce is committed before
+   * any follow-up record. Otherwise the next record reads a stale nonce, signs the wrong EIP-712
+   * digest, and the committee cannot recover the signer → `BadAttestorSignature`. Tolerant of
+   * multiplexed-RPC "unknown block" (drpc) while polling for the receipt.
+   */
+  private async recordAndConfirm(decision: FirewallDecision): Promise<Hex> {
+    const hash = await this.recordDecision(decision);
+    await withRpcRetry(
+      () => this.publicClient.waitForTransactionReceipt({ hash, pollingInterval: 2_000 }),
+      { retries: 6, baseDelayMs: 1_000 },
+    );
+    return hash;
+  }
+
   async guardedSendTransaction(action: AgentAction, options: GuardedSendOptions = {}): Promise<GuardedSendResult> {
     const decision = await this.checkAction(action);
     const shouldRecord = options.recordDecision ?? true;
@@ -1065,7 +1080,7 @@ export class InterlockFirewall {
 
     if (!decision.allowed) {
       if (shouldRecord) {
-        attestationHash = await this.recordDecision(decision);
+        attestationHash = await this.recordAndConfirm(decision);
       }
       if (shouldThrowOnBlock) {
         throw new ActionBlockedError(decision);
@@ -1075,15 +1090,9 @@ export class InterlockFirewall {
 
     const walletClient = this.requireWalletClient("guardedSendTransaction");
     if (shouldRecord && recordTiming === "before-send") {
-      attestationHash = await this.recordDecision(decision);
-      // Wait for the record to mine before the next send so the nonce advances — otherwise the two
-      // back-to-back sends reuse the same nonce and the sequencer rejects the second as a
-      // "replacement transaction underpriced". withRpcRetry tolerates transient "unknown block" from
-      // multiplexed RPCs (drpc) that haven't synced the block yet.
-      await withRpcRetry(
-        () => this.publicClient.waitForTransactionReceipt({ hash: attestationHash!, pollingInterval: 2_000 }),
-        { retries: 6, baseDelayMs: 1_000 },
-      );
+      // Record + wait for it to mine before the executed send: the nonce advances (no "replacement
+      // transaction underpriced") and the attestation nonce is committed for any next record.
+      attestationHash = await this.recordAndConfirm(decision);
     }
 
     const transactionHash = await walletClient.sendTransaction({
@@ -1095,12 +1104,13 @@ export class InterlockFirewall {
     });
 
     if (shouldRecord && recordTiming === "after-send") {
-      // Same reason: let the executed tx mine (nonce advances) before sending the attestation tx.
+      // Let the executed tx mine (nonce advances) before the attestation send, then record + wait so
+      // the attestation nonce is committed before any next record (avoids BadAttestorSignature).
       await withRpcRetry(
         () => this.publicClient.waitForTransactionReceipt({ hash: transactionHash, pollingInterval: 2_000 }),
         { retries: 6, baseDelayMs: 1_000 },
       );
-      attestationHash = await this.recordDecision(decision);
+      attestationHash = await this.recordAndConfirm(decision);
     }
 
     return { decision, sent: true, attestationHash, transactionHash };
