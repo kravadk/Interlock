@@ -1076,6 +1076,10 @@ export class InterlockFirewall {
     const walletClient = this.requireWalletClient("guardedSendTransaction");
     if (shouldRecord && recordTiming === "before-send") {
       attestationHash = await this.recordDecision(decision);
+      // Wait for the record to mine before the next send so the nonce advances — otherwise the two
+      // back-to-back sends reuse the same nonce and the sequencer rejects the second as a
+      // "replacement transaction underpriced".
+      await this.publicClient.waitForTransactionReceipt({ hash: attestationHash });
     }
 
     const transactionHash = await walletClient.sendTransaction({
@@ -1087,6 +1091,8 @@ export class InterlockFirewall {
     });
 
     if (shouldRecord && recordTiming === "after-send") {
+      // Same reason: let the executed tx mine (nonce advances) before sending the attestation tx.
+      await this.publicClient.waitForTransactionReceipt({ hash: transactionHash });
       attestationHash = await this.recordDecision(decision);
     }
 

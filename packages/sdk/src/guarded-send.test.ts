@@ -38,6 +38,7 @@ describe("guardedSendTransaction", () => {
         return txHash;
       }),
     });
+    (firewall as any).publicClient = { waitForTransactionReceipt: vi.fn(async () => ({ status: "success" })) };
     const result = await firewall.guardedSendTransaction(action);
     expect(result.sent).toBe(true);
     expect(calls).toEqual(["send", "record"]);
@@ -58,6 +59,7 @@ describe("guardedSendTransaction", () => {
         return txHash;
       }),
     });
+    (firewall as any).publicClient = { waitForTransactionReceipt: vi.fn(async () => ({ status: "success" })) };
     const result = await firewall.guardedSendTransaction(action, { recordTiming: "before-send" });
     expect(result.sent).toBe(true);
     expect(calls).toEqual(["record", "send"]);
