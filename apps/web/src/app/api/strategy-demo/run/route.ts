@@ -7,6 +7,10 @@ import { rateLimit } from "../../../../lib/rate-limit";
 
 const log = createLogger("web:strategy-demo");
 
+// One step waits for two on-chain receipts (executed tx + attestation) with retries, which can exceed
+// the default serverless timeout. Allow up to 60s (Fluid Compute) so a slow Mantle block doesn't 504.
+export const maxDuration = 60;
+
 /**
  * AI yield-strategy agent — server side. Pulls LIVE Mantle yields (DefiLlama, real data — no mocks),
  * ranks them with the deterministic `pickAllocation` strategy, and routes the chosen allocation THROUGH
