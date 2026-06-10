@@ -413,6 +413,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   color: #fff; font-weight: 700; font-size: 14px;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0; font-family: inherit; appearance: none; -webkit-appearance: none;
   transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med);
 }
 .avatar:hover { transform: translateY(-1px) scale(1.03); box-shadow: 0 14px 32px rgba(59, 130, 246, 0.22); }

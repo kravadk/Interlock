@@ -155,8 +155,8 @@ export function TopBar({
           </span>
         ) : null}
         <span
-          className={`live-badge ${!wallet ? "readonly" : wrongChain ? "error" : "indexer"}`}
-          title={!wallet ? "Read-only mode: preflight and docs work, writes require wallet." : wrongChain ? "Wrong network: switch to Mantle Sepolia before writes." : "Wallet is on Mantle Sepolia."}
+          className={`live-badge ${walletError ? "error" : !wallet ? "readonly" : wrongChain ? "error" : "indexer"}`}
+          title={walletError || (!wallet ? "Read-only mode: preflight and docs work, writes require wallet." : wrongChain ? "Wrong network: switch to Mantle Sepolia before writes." : "Wallet is on Mantle Sepolia.")}
         >
           <span className="live-dot" />
           {walletMode}
@@ -174,16 +174,17 @@ export function TopBar({
           <Icon.wallet s={16} />
           <span>{wallet ? shortAddress(wallet.address) : "Connect Wallet"}</span>
         </button>
-        <span
-          className={`icon-btn status-icon${walletError ? " has-error" : ""}`}
-          role="status"
-          title={walletError || (wrongChain ? "Wrong network — switch to Mantle Sepolia" : "Mantle Sepolia")}
+        <button
+          className="avatar"
+          type="button"
+          title={wallet ? `Copy wallet address ${wallet.address}` : "Connect a wallet"}
+          onClick={() => {
+            if (wallet) void navigator.clipboard?.writeText(wallet.address);
+            else onConnect();
+          }}
         >
-          <Icon.bell s={18} />
-        </span>
-        <div className="avatar" title={wallet?.address}>
           {wallet ? wallet.address.slice(2, 3).toUpperCase() : "·"}
-        </div>
+        </button>
       </div>
     </header>
   );
