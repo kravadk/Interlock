@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPublicClient, formatEther, http, isAddress, parseEther, type Address, type Hex } from "viem";
 import {
   agentRegistryGetAgentSelector,
@@ -65,7 +65,21 @@ export type BundleReviewUiReport = {
 
 export default function App() {
   const { push } = useToast();
-  const [active, setActive] = useState<ActiveView>("dashboard");
+  const [active, setActiveState] = useState<ActiveView>("dashboard");
+  // Deep-linkable tabs: every tab is /app?view=<id>. Read the param on mount (so a shared link opens
+  // straight on that tab), and sync the URL whenever the tab changes (refresh + back/forward work).
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("view");
+    if (v && NAV.some((n) => n.id === v)) setActiveState(v as ActiveView);
+  }, []);
+  const setActive = useCallback((next: ActiveView) => {
+    setActiveState(next);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("view", next);
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, []);
 
   const [wallet, setWallet] = useState<ConnectedWallet>();
   const [walletError, setWalletError] = useState("");

@@ -38,7 +38,7 @@ working **AI yield-strategy agent that trades through the firewall** — every m
 recorded on-chain.
 
 **See it in 60 seconds** — live: **https://interlock-mantle.vercel.app**
-- Open the **Strategy Agent** tab → *Run strategy agent*: live DefiLlama yields → the strategy picks a
+- Straight to the demo: **[interlock-mantle.vercel.app/app?view=strategy-agent](https://interlock-mantle.vercel.app/app?view=strategy-agent)** → *Run strategy agent*: live DefiLlama yields → the strategy picks a
   pool (with an advisory AI review) → Interlock **ALLOWs** a sized allocation (on-chain tx) → **BLOCKs**
   an over-budget trade → every decision recorded on-chain. (Walkthrough: [docs/demo-script.md](docs/demo-script.md).)
 - Public proof, no wallet: **[interlock-mantle.vercel.app/agent/13](https://interlock-mantle.vercel.app/agent/13)**
