@@ -28,7 +28,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       >
         <main style={{ maxWidth: 520, padding: 32, textAlign: "center" }}>
           <p style={{ color: "#7d7d85", fontSize: 12, letterSpacing: "0.04em", margin: 0 }}>
-            AGENTOPS · MANTLE SEPOLIA
+            INTERLOCK · MANTLE SEPOLIA
           </p>
           <h1 style={{ fontSize: 22, margin: "12px 0" }}>The dashboard crashed</h1>
           <p style={{ color: "#b6b6bb", fontSize: 14, lineHeight: 1.5 }}>

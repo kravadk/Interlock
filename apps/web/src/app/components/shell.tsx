@@ -57,7 +57,7 @@ export function Sidebar({
         <span className="sb-logo">
           <Logo />
         </span>
-        <span className="sb-brand">AGENTOPS</span>
+        <span className="sb-brand">INTERLOCK</span>
         <button className="sb-collapse" type="button" title="Mantle Control Plane">
           <Icon.panel s={18} />
         </button>
