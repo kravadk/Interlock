@@ -1078,8 +1078,12 @@ export class InterlockFirewall {
       attestationHash = await this.recordDecision(decision);
       // Wait for the record to mine before the next send so the nonce advances — otherwise the two
       // back-to-back sends reuse the same nonce and the sequencer rejects the second as a
-      // "replacement transaction underpriced".
-      await this.publicClient.waitForTransactionReceipt({ hash: attestationHash });
+      // "replacement transaction underpriced". withRpcRetry tolerates transient "unknown block" from
+      // multiplexed RPCs (drpc) that haven't synced the block yet.
+      await withRpcRetry(
+        () => this.publicClient.waitForTransactionReceipt({ hash: attestationHash!, pollingInterval: 2_000 }),
+        { retries: 6, baseDelayMs: 1_000 },
+      );
     }
 
     const transactionHash = await walletClient.sendTransaction({
@@ -1092,7 +1096,10 @@ export class InterlockFirewall {
 
     if (shouldRecord && recordTiming === "after-send") {
       // Same reason: let the executed tx mine (nonce advances) before sending the attestation tx.
-      await this.publicClient.waitForTransactionReceipt({ hash: transactionHash });
+      await withRpcRetry(
+        () => this.publicClient.waitForTransactionReceipt({ hash: transactionHash, pollingInterval: 2_000 }),
+        { retries: 6, baseDelayMs: 1_000 },
+      );
       attestationHash = await this.recordDecision(decision);
     }
 

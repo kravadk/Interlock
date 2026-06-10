@@ -35,7 +35,13 @@ export function isRetryableRpcError(error: unknown) {
     message.includes("fetch failed") ||
     message.includes("temporarily unavailable") ||
     message.includes("503") ||
-    message.includes("429")
+    message.includes("429") ||
+    // Multiplexed RPCs (e.g. drpc) route requests across backends; a node that hasn't synced the tx's
+    // block yet returns these transiently while waiting for a receipt — safe to retry.
+    message.includes("unknown block") ||
+    message.includes("not found") ||
+    message.includes("could not be found") ||
+    message.includes("header not found")
   );
 }
 
