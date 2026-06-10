@@ -68,7 +68,13 @@ export function hasPolicyContractConfigured() {
 }
 
 export function mantleRpcUrl() {
-  return process.env.NEXT_PUBLIC_MANTLE_RPC_URL ?? mantleSepolia.rpcUrls.default.http[0];
+  // Prefer a server-only RPC (MANTLE_RPC_URL) so a dedicated/keyed endpoint (e.g. Alchemy) is never
+  // shipped to the browser. On the client this env is undefined, so it falls back to the public one.
+  return (
+    process.env.MANTLE_RPC_URL ??
+    process.env.NEXT_PUBLIC_MANTLE_RPC_URL ??
+    mantleSepolia.rpcUrls.default.http[0]
+  );
 }
 
 export function actionAttestationFromBlock() {
