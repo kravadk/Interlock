@@ -128,7 +128,15 @@ export async function POST(request: Request) {
       { headers: { "x-request-id": id } },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message.split("\n")[0] : String(error);
+    // Surface the full RPC failure (method/params/details) so misconfig vs RPC-rejection is diagnosable.
+    const e = error as { shortMessage?: string; message?: string; name?: string; details?: string; metaMessages?: string[] };
+    const parts = [
+      e?.name ? `[${e.name}]` : "",
+      e?.shortMessage || e?.message?.split("\n")[0] || String(error),
+      e?.details ? `details: ${e.details}` : "",
+      e?.metaMessages?.length ? e.metaMessages.join(" | ") : "",
+    ].filter(Boolean);
+    const message = parts.join(" — ").replace(/\s+/g, " ").slice(0, 600);
     log.error("strategy step failed", { message });
     return Response.json({ error: message }, { status: 500 });
   }
