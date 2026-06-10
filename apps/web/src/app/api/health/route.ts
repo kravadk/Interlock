@@ -29,6 +29,19 @@ export async function GET() {
       policyRegistry: webContracts.policyRegistry !== zeroAddress,
       actionAttestation: webContracts.actionAttestation !== zeroAddress,
     },
+    // Public addresses (not secrets) — so misconfiguration (e.g. a stale V3 attestation) is visible.
+    addresses: {
+      actionAttestation: webContracts.actionAttestation,
+      agentRegistry: webContracts.agentRegistry,
+      policyRegistry: webContracts.policyRegistry,
+    },
+    // Strategy-demo config (public addresses + ids), read exactly as the strategy route reads it.
+    strategy: {
+      router: process.env.TEST_STRATEGY_ROUTER ?? process.env.NEXT_PUBLIC_TEST_STRATEGY_ROUTER ?? null,
+      vault: process.env.TEST_STRATEGY_VAULT ?? process.env.NEXT_PUBLIC_TEST_STRATEGY_VAULT ?? null,
+      agentId: process.env.AGENT_ID ?? process.env.NEXT_PUBLIC_DEFAULT_AGENT_ID ?? null,
+      policyId: process.env.POLICY_ID ?? process.env.NEXT_PUBLIC_DEFAULT_POLICY_ID ?? null,
+    },
     // Presence only — never the values.
     keys: {
       ai: Boolean(process.env.ANTHROPIC_API_KEY?.trim()),
