@@ -51,7 +51,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
   const step = Number.isInteger(body.step) && body.step! >= 0 ? body.step! : 0;
-  const greedy = step % 2 === 1; // odd steps demonstrate a BLOCK
 
   try {
     const agentId = BigInt(agentIdRaw!);
@@ -77,8 +76,8 @@ export async function POST(request: Request) {
       },
     });
 
-    // 3. Size the on-chain action. Greedy step intentionally exceeds the policy value limit → BLOCK.
-    const allocateWei = greedy ? policy.maxNativeValue * 20n : decisionPlan.allocateWei;
+    // 3. Size the on-chain action — the risk-adjusted ticket (always within the policy value limit).
+    const allocateWei = decisionPlan.allocateWei > 0n ? decisionPlan.allocateWei : parseEther("0.01");
     const receiver = privateKeyToAccount(privateKey).address;
     const data = testStrategyRouterRouteNativeDepositCalldata({ vault, receiver, maxSlippageBps: policy.maxSlippageBps });
     const action = { agentId, policyId, tx: { to: router, value: allocateWei, data } };
@@ -98,7 +97,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         step,
-        mode: greedy ? "risk-check (over-budget)" : "allocate",
+        mode: "allocate",
         signalCount: signals.length,
         topPools: decisionPlan.ranked.slice(0, 5).map((p) => ({
           project: p.signal.project,
@@ -112,9 +111,7 @@ export async function POST(request: Request) {
           ? { project: decisionPlan.chosen.project, symbol: decisionPlan.chosen.symbol ?? null, apy: decisionPlan.chosen.apy ?? null }
           : null,
         metrics: decisionPlan.metrics,
-        rationale: greedy
-          ? `Risk check: agent attempted to allocate 20x the policy value limit — the firewall must block this.`
-          : decisionPlan.rationale,
+        rationale: decisionPlan.rationale,
         allocateWei: allocateWei.toString(),
         decision: gateway.decision.decision,
         reasonCode: gateway.decision.reasonCode,

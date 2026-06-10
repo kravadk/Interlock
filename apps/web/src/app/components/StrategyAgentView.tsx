@@ -44,7 +44,7 @@ type StrategyStep = {
   metrics?: StrategyMetrics;
 };
 
-const strategySteps = 4; // 2 risk-sized allocations + 2 over-budget risk checks
+const strategySteps = 3; // risk-sized allocations, each executed + recorded on-chain
 
 export function StrategyAgentView() {
   const { push } = useToast();
