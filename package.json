@@ -90,15 +90,15 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
-    "@playwright/test": "^1.60.0",
-    "@types/node": "^22.15.29",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@playwright/test": "^1.61.0",
+    "@types/node": "^26.0.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "next": "^15.5.18",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
     "viem": "^2.51.3",
-    "vitest": "^3.1.4"
+    "vitest": "^4.1.9"
   }
 }

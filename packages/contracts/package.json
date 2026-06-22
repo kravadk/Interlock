@@ -23,9 +23,9 @@
   },
   "devDependencies": {
     "fast-check": "^4.8.0",
-    "solhint": "^6.2.1",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "vitest": "^3.1.4"
+    "solhint": "^6.2.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }
