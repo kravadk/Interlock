@@ -18,8 +18,8 @@
   "dependencies": {
     "@interlock/shared": "workspace:*",
     "ganache": "^7.9.2",
-    "solc": "^0.8.30",
-    "viem": "^2.30.0"
+    "solc": "^0.8.36",
+    "viem": "^2.55.1"
   },
   "devDependencies": {
     "fast-check": "^4.8.0",
