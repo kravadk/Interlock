@@ -22,10 +22,10 @@
     "viem": "^2.30.0"
   },
   "devDependencies": {
-    "fast-check": "^4.8.0",
-    "solhint": "^6.2.1",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "vitest": "^3.1.4"
+    "fast-check": "^4.9.0",
+    "solhint": "^6.2.3",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
