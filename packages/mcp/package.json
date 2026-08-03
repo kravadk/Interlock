@@ -31,8 +31,8 @@
   "dependencies": {
     "@interlock/firewall-sdk": "workspace:*",
     "@interlock/shared": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "viem": "^2.30.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "viem": "^2.55.10",
     "zod": "^3.25.76"
   },
   "devDependencies": {

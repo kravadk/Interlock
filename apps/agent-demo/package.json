@@ -15,7 +15,7 @@
   "dependencies": {
     "@interlock/firewall-sdk": "workspace:*",
     "@interlock/shared": "workspace:*",
-    "viem": "^2.30.0"
+    "viem": "^2.55.10"
   },
   "devDependencies": {
     "tsx": "^4.19.4",
