@@ -14,20 +14,20 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "@anthropic-ai/sdk": "^0.115.0",
     "@interlock/firewall-sdk": "workspace:*",
     "@interlock/shared": "workspace:*",
     "framer-motion": "^12.40.0",
-    "lenis": "^1.3.23",
+    "lenis": "^1.3.26",
     "next": "^15.3.3",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "viem": "^2.30.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "viem": "^2.55.11"
   },
   "devDependencies": {
     "@types/node": "^22.15.29",
-    "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.5",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "eslint": "^9.28.0",
     "eslint-config-next": "^15.3.3",
     "typescript": "^5.8.3",

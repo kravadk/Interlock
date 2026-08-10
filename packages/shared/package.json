@@ -38,7 +38,7 @@
     "test": "pnpm check"
   },
   "dependencies": {
-    "viem": "^2.30.0"
+    "viem": "^2.55.11"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
